@@ -18,5 +18,7 @@ This R package offers a wrapper around the Barnes-Hut TSNE C++ implementation of
 
 #References
 [1] L.J.P. van der Maaten and G.E. Hinton. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605, 2008.
+
 [2] L.J.P. van der Maaten. Barnes-Hut-SNE. In Proceedings of the International Conference on Learning Representations, 2013.
+
 [3] http://homepage.tudelft.nl/19j49/t-SNE.html
