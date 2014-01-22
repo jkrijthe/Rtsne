@@ -1,1 +1,3 @@
 export(Rtsne)
+useDynLib(Rtsne)
+exportPattern("^[[:alpha:]]+")
