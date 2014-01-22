@@ -1,0 +1,10 @@
+
+*.o
+
+*.Rproj
+
+*.so
+
+.Rbuildignore
+
+.Rhistory
