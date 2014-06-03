@@ -25,7 +25,7 @@ Rcpp::List Rtsne_cpp(SEXP X_in, double perplexity_in, double theta_in) {
   D=X.ncol();
     
 	data = (double*) calloc(D * origN, sizeof(double));
-    if(data == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(data == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     for (int i = 0; i < origN; i++){
         for (int j = 0; j < D; j++){
             data[i*D+j] = X(i,j);
@@ -34,14 +34,14 @@ Rcpp::List Rtsne_cpp(SEXP X_in, double perplexity_in, double theta_in) {
 
     // Make dummy landmarks
     N = origN;
-    printf("Read the %i x %i data matrix successfully!\n", N, D);
+    Rprintf("Read the %i x %i data matrix successfully!\n", N, D);
     int* landmarks = (int*) malloc(N * sizeof(int));
-    if(landmarks == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(landmarks == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     for(int n = 0; n < N; n++) landmarks[n] = n;
 
 		double* Y = (double*) malloc(N * no_dims * sizeof(double));
 		double* costs = (double*) calloc(N, sizeof(double));
-    if(Y == NULL || costs == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(Y == NULL || costs == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     
     // Run tsne
 		tsne->run(data, N, D, Y, no_dims, perplexity, theta);

@@ -36,9 +36,9 @@
 
 using namespace std;
 
-static inline double min(double x, double y) { return (x <= y ? x : y); }
-static inline double max(double x, double y) { return (x <= y ? y : x); }
-static inline double abs(double x) { return (x < .0 ? -x : x); }
+//static inline double min(double x, double y) { return (x <= y ? x : y); }
+//static inline double max(double x, double y) { return (x <= y ? y : x); }
+//static inline double abs(double x) { return (x < .0 ? -x : x); }
 
 class Cell {
     

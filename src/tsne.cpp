@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <cstring>
 #include <time.h>
+#include <Rcpp.h>
 #include "quadtree.h"
 #include "vptree.h"
 #include "tsne.h"
@@ -54,8 +55,8 @@ using namespace std;
 void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta) {
     
     // Determine whether we are using an exact algorithm
-    if(N - 1 < 3 * perplexity) { printf("Perplexity too large for the number of data points!\n"); exit(1); }
-    printf("Using no_dims = %d, perplexity = %f, and theta = %f\n", no_dims, perplexity, theta);
+    if(N - 1 < 3 * perplexity) { Rcpp::stop("Perplexity too large for the number of data points!\n"); }
+    Rprintf("Using no_dims = %d, perplexity = %f, and theta = %f\n", no_dims, perplexity, theta);
     bool exact = (theta == .0) ? true : false;
     
     // Set learning parameters
@@ -69,12 +70,12 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     double* dY    = (double*) malloc(N * no_dims * sizeof(double));
     double* uY    = (double*) malloc(N * no_dims * sizeof(double));
     double* gains = (double*) malloc(N * no_dims * sizeof(double));
-    if(dY == NULL || uY == NULL || gains == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(dY == NULL || uY == NULL || gains == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     for(int i = 0; i < N * no_dims; i++)    uY[i] =  .0;
     for(int i = 0; i < N * no_dims; i++) gains[i] = 1.0;
     
     // Normalize input data (to prevent numerical problems)
-    printf("Computing input similarities...\n");
+    Rprintf("Computing input similarities...\n");
     start = clock();
     zeroMean(X, N, D);
     double max_X = .0;
@@ -89,11 +90,11 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
         
         // Compute similarities
         P = (double*) malloc(N * N * sizeof(double));
-        if(P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+        if(P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
         computeGaussianPerplexity(X, N, D, P, perplexity);
     
         // Symmetrize input similarities
-        printf("Symmetrizing...\n");
+        Rprintf("Symmetrizing...\n");
         for(int n = 0; n < N; n++) {
             for(int m = n + 1; m < N; m++) {
                 P[n * N + m] += P[m * N + n];
@@ -127,8 +128,8 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
 	for(int i = 0; i < N * no_dims; i++) Y[i] = randn() * .0001;
 	
 	// Perform main training loop
-    if(exact) printf("Done in %4.2f seconds!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC);
-    else printf("Done in %4.2f seconds (sparsity = %f)!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC, (double) row_P[N] / ((double) N * (double) N));
+    if(exact) Rprintf("Done in %4.2f seconds!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC);
+    else Rprintf("Done in %4.2f seconds (sparsity = %f)!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC, (double) row_P[N] / ((double) N * (double) N));
     start = clock();
 	for(int iter = 0; iter < max_iter; iter++) {
         
@@ -161,10 +162,10 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
             if(exact) C = evaluateError(P, Y, N);
             else      C = evaluateError(row_P, col_P, val_P, Y, N, theta);  // doing approximate computation here!
             if(iter == 0)
-                printf("Iteration %d: error is %f\n", iter + 1, C);
+                Rprintf("Iteration %d: error is %f\n", iter + 1, C);
             else {
                 total_time += (float) (end - start) / CLOCKS_PER_SEC;
-                printf("Iteration %d: error is %f (50 iterations in %4.2f seconds)\n", iter, C, (float) (end - start) / CLOCKS_PER_SEC);
+                Rprintf("Iteration %d: error is %f (50 iterations in %4.2f seconds)\n", iter, C, (float) (end - start) / CLOCKS_PER_SEC);
             }
 			start = clock();
         }
@@ -181,7 +182,7 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
         free(col_P); col_P = NULL;
         free(val_P); val_P = NULL;
     }
-    printf("Fitting performed in %4.2f seconds.\n", total_time);
+    Rprintf("Fitting performed in %4.2f seconds.\n", total_time);
 }
 
 
@@ -196,7 +197,7 @@ void TSNE::computeGradient(double* P, int* inp_row_P, int* inp_col_P, double* in
     double sum_Q = .0;
     double* pos_f = (double*) calloc(N * D, sizeof(double));
     double* neg_f = (double*) calloc(N * D, sizeof(double));
-    if(pos_f == NULL || neg_f == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(pos_f == NULL || neg_f == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     tree->computeEdgeForces(inp_row_P, inp_col_P, inp_val_P, N, pos_f);
     for(int n = 0; n < N; n++) tree->computeNonEdgeForces(n, theta, neg_f + n * D, &sum_Q);
     
@@ -217,12 +218,12 @@ void TSNE::computeExactGradient(double* P, double* Y, int N, int D, double* dC) 
     
     // Compute the squared Euclidean distance matrix
     double* DD = (double*) malloc(N * N * sizeof(double));
-    if(DD == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(DD == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     computeSquaredEuclideanDistance(Y, N, D, DD);
     
     // Compute Q-matrix and normalization sum
     double* Q    = (double*) malloc(N * N * sizeof(double));
-    if(Q == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(Q == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     double sum_Q = .0;
     for(int n = 0; n < N; n++) {
     	for(int m = 0; m < N; m++) {
@@ -257,7 +258,7 @@ double TSNE::evaluateError(double* P, double* Y, int N) {
     // Compute the squared Euclidean distance matrix
     double* DD = (double*) malloc(N * N * sizeof(double));
     double* Q = (double*) malloc(N * N * sizeof(double));
-    if(DD == NULL || Q == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(DD == NULL || Q == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     computeSquaredEuclideanDistance(Y, N, 2, DD);
     
     // Compute Q-matrix and normalization sum
@@ -322,7 +323,7 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double 
 	
 	// Compute the squared Euclidean distance matrix
 	double* DD = (double*) malloc(N * N * sizeof(double));
-    if(DD == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(DD == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
 	computeSquaredEuclideanDistance(X, N, D, DD);
 	
 	// Compute the Gaussian kernel row by row
@@ -389,18 +390,18 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double 
 // Compute input similarities with a fixed perplexity using ball trees (this function allocates memory another function should free)
 void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K) {
     
-    if(perplexity > K) printf("Perplexity should be lower than K!\n");
+    if(perplexity > K) Rprintf("Perplexity should be lower than K!\n");
     
     // Allocate the memory we need
     *_row_P = (int*)    malloc((N + 1) * sizeof(int));
     *_col_P = (int*)    calloc(N * K, sizeof(int));
     *_val_P = (double*) calloc(N * K, sizeof(double));
-    if(*_row_P == NULL || *_col_P == NULL || *_val_P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(*_row_P == NULL || *_col_P == NULL || *_val_P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     int* row_P = *_row_P;
     int* col_P = *_col_P;
     double* val_P = *_val_P;
     double* cur_P = (double*) malloc((N - 1) * sizeof(double));
-    if(cur_P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(cur_P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     row_P[0] = 0;
     for(int n = 0; n < N; n++) row_P[n + 1] = row_P[n] + K;    
     
@@ -411,12 +412,12 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int*
     tree->create(obj_X);
     
     // Loop over all points to find nearest neighbors
-    printf("Building tree...\n");
+    Rprintf("Building tree...\n");
     vector<DataPoint> indices;
     vector<double> distances;
     for(int n = 0; n < N; n++) {
         
-        if(n % 10000 == 0) printf(" - point %d of %d\n", n, N);
+        if(n % 10000 == 0) Rprintf(" - point %d of %d\n", n, N);
         
         // Find nearest neighbors
         indices.clear();
@@ -492,7 +493,7 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int*
     double* buff  = (double*) malloc(D * sizeof(double));
     double* DD    = (double*) malloc(N * sizeof(double));
     double* cur_P = (double*) malloc(N * sizeof(double));
-    if(buff == NULL || DD == NULL || cur_P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(buff == NULL || DD == NULL || cur_P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
 
     // Compute the Gaussian kernel row by row (to find number of elements in sparse P)
     int total_count = 0;
@@ -568,7 +569,7 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int*
     int* row_P = *_row_P;
     int* col_P = *_col_P;
     double* val_P = *_val_P;
-    if(row_P == NULL || col_P == NULL || val_P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(row_P == NULL || col_P == NULL || val_P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     row_P[0] = 0;
     
     // Compute the Gaussian kernel row by row (this time, store the results)
@@ -659,7 +660,7 @@ void TSNE::symmetrizeMatrix(int** _row_P, int** _col_P, double** _val_P, int N) 
 
     // Count number of elements and row counts of symmetric matrix
     int* row_counts = (int*) calloc(N, sizeof(int));
-    if(row_counts == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(row_counts == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     for(int n = 0; n < N; n++) {
         for(int i = row_P[n]; i < row_P[n + 1]; i++) {
             
@@ -682,7 +683,7 @@ void TSNE::symmetrizeMatrix(int** _row_P, int** _col_P, double** _val_P, int N) 
     int*    sym_row_P = (int*)    malloc((N + 1) * sizeof(int));
     int*    sym_col_P = (int*)    malloc(no_elem * sizeof(int));
     double* sym_val_P = (double*) malloc(no_elem * sizeof(double));
-    if(sym_row_P == NULL || sym_col_P == NULL || sym_val_P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(sym_row_P == NULL || sym_col_P == NULL || sym_val_P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     
     // Construct new row indices for symmetric matrix
     sym_row_P[0] = 0;
@@ -690,7 +691,7 @@ void TSNE::symmetrizeMatrix(int** _row_P, int** _col_P, double** _val_P, int N) 
     
     // Fill the result matrix
     int* offset = (int*) calloc(N, sizeof(int));
-    if(offset == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(offset == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     for(int n = 0; n < N; n++) {
         for(int i = row_P[n]; i < row_P[n + 1]; i++) {                                  // considering element(n, col_P[i])
             
@@ -740,7 +741,7 @@ void TSNE::symmetrizeMatrix(int** _row_P, int** _col_P, double** _val_P, int N) 
 // Compute squared Euclidean distance matrix (using BLAS)
 void TSNE::computeSquaredEuclideanDistance(double* X, int N, int D, double* DD) {
     double* dataSums = (double*) calloc(N, sizeof(double));
-    if(dataSums == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(dataSums == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     for(int n = 0; n < N; n++) {
         for(int d = 0; d < D; d++) {
             dataSums[n] += (X[n * D + d] * X[n * D + d]);
@@ -763,7 +764,7 @@ void TSNE::zeroMean(double* X, int N, int D) {
 	
 	// Compute data mean
 	double* mean = (double*) calloc(D, sizeof(double));
-    if(mean == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(mean == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
 	for(int n = 0; n < N; n++) {
 		for(int d = 0; d < D; d++) {
 			mean[d] += X[n * D + d];
@@ -804,7 +805,7 @@ bool TSNE::load_data(double** data, int* n, int* d, double* theta, double* perpl
 	// Open file, read first 2 integers, allocate memory, and read the data
     FILE *h;
 	if((h = fopen("data.dat", "r+b")) == NULL) {
-		printf("Error: could not open data file.\n");
+		Rprintf("Error: could not open data file.\n");
 		return false;
 	}
 	fread(n, sizeof(int), 1, h);											// number of datapoints
@@ -812,10 +813,10 @@ bool TSNE::load_data(double** data, int* n, int* d, double* theta, double* perpl
     fread(theta, sizeof(double), 1, h);										// gradient accuracy
 	fread(perplexity, sizeof(double), 1, h);								// perplexity
 	*data = (double*) calloc(*d * *n, sizeof(double));
-    if(*data == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+    if(*data == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     fread(*data, sizeof(double), *n * *d, h);                               // the data
 	fclose(h);
-	printf("Read the %i x %i data matrix successfully!\n", *n, *d);
+	Rprintf("Read the %i x %i data matrix successfully!\n", *n, *d);
 	return true;
 }
 
@@ -825,7 +826,7 @@ void TSNE::save_data(double* data, int* landmarks, double* costs, int n, int d) 
 	// Open file, write first 2 integers and then the data
 	FILE *h;
 	if((h = fopen("result.dat", "w+b")) == NULL) {
-		printf("Error: could not open data file.\n");
+		Rprintf("Error: could not open data file.\n");
 		return;
 	}
 	fwrite(&n, sizeof(int), 1, h);
@@ -834,5 +835,5 @@ void TSNE::save_data(double* data, int* landmarks, double* costs, int n, int d) 
 	fwrite(landmarks, sizeof(int), n, h);
     fwrite(costs, sizeof(double), n, h);
     fclose(h);
-	printf("Wrote the %i x %i data matrix successfully!\n", n, d);
+	Rprintf("Wrote the %i x %i data matrix successfully!\n", n, d);
 }

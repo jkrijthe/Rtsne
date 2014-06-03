@@ -2,7 +2,7 @@
 #' 
 #' Wrapper for the C++ implementation of Barnes-Hut t-Distributed Stochastic Neighbor Embedding
 #' 
-#' After checking the correctness of the input, this function does an initial reduction of the feature space using \code{\link{princomp}} , before calling the C++ TSNE implementation.
+#' After checking the correctness of the input, this function does an initial reduction of the feature space using \code{\link{prcomp}} , before calling the C++ TSNE implementation.
 #' 
 #' @param X Data matrix
 #' @param initial_dims the number of dimensions that should be retained in the initial PCA step (default: 50)
@@ -24,6 +24,9 @@
 #' tsne_out <- Rtsne(as.matrix(iris_unique[,1:4])) # Run TSNE
 #' plot(tsne_out$Y,col=iris$Species) # Plot the result
 #' 
+#' @useDynLib Rtsne
+#' @import Rcpp
+#' 
 #' @export
 Rtsne<-function(X, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE) {
   if (!is.numeric(theta) | (theta<=0.0) | (theta>1.0) ) { stop("Incorrect theta.")}
@@ -37,7 +40,7 @@ Rtsne<-function(X, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=T
   }
   
   #apply pca:
-  X <- princomp(X)$scores[,1:min(initial_dims,ncol(X))]
+  X <- prcomp(X,retx=TRUE)$x[,1:min(initial_dims,ncol(X))]
 
   Rtsne_cpp(X,perplexity,theta)
 }

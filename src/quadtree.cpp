@@ -35,6 +35,7 @@
 #include <R_ext/BLAS.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <Rcpp.h>
 #include "quadtree.h"
 
 
@@ -383,24 +384,24 @@ void QuadTree::computeEdgeForces(int* row_P, int* col_P, double* val_P, int N, d
 void QuadTree::print() 
 {
     if(cum_size == 0) {
-        printf("Empty node\n");
+        Rprintf("Empty node\n");
         return;
     }
 
     if(is_leaf) {
-        printf("Leaf node; data = [");
+        Rprintf("Leaf node; data = [");
         for(int i = 0; i < size; i++) {
             double* point = data + index[i] * QT_NO_DIMS;
-            for(int d = 0; d < QT_NO_DIMS; d++) printf("%f, ", point[d]);
-            printf(" (index = %d)", index[i]);
-            if(i < size - 1) printf("\n");
-            else printf("]\n");
+            for(int d = 0; d < QT_NO_DIMS; d++) Rprintf("%f, ", point[d]);
+            Rprintf(" (index = %d)", index[i]);
+            if(i < size - 1) Rprintf("\n");
+            else Rprintf("]\n");
         }        
     }
     else {
-        printf("Intersection node with center-of-mass = [");
-        for(int d = 0; d < QT_NO_DIMS; d++) printf("%f, ", center_of_mass[d]);
-        printf("]; children are:\n");
+        Rprintf("Intersection node with center-of-mass = [");
+        for(int d = 0; d < QT_NO_DIMS; d++) Rprintf("%f, ", center_of_mass[d]);
+        Rprintf("]; children are:\n");
         northEast->print();
         northWest->print();
         southEast->print();
