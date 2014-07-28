@@ -15,6 +15,7 @@ To install the latest version from the github repository, use:
 ```{R}
 install.packages("devtools") # If not already installed
 install_github("Rtsne","jkrijthe")
+```
 
 #Details
 This R package offers a wrapper around the Barnes-Hut TSNE C++ implementation of [2] [3]. Only minor changes were made to the original code to allow it to function as an R package.
