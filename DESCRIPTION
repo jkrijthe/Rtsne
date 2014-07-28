@@ -1,13 +1,15 @@
 Package: Rtsne
 Type: Package
-Title: T-distributed Stochastic Neighbor Embedding using Barnes-Hut implementation
-Version: 0.5
+Title: T-distributed Stochastic Neighbor Embedding using Barnes-Hut
+    implementation
+Version: 0.8
 Date: 2014-01-21
 Author: Jesse Krijthe <jkrijthe@gmail.com>
 Maintainer: Jesse Krijthe <jkrijthe@gmail.com>
 Description: An R wrapper around the fast T-distributed Stochastic
     Neighbor Embedding implementation by Van der Maaten
 License: BSD_3_clause + file LICENSE
+URL: https://github.com/jkrijthe/Rtsne
 Imports:
     Rcpp (>= 0.11.0)
 LinkingTo: Rcpp

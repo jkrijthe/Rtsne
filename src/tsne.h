@@ -35,7 +35,7 @@
 #define TSNE_H
 
 
-static inline double sign(double x) { return (x == .0 ? .0 : (x < .0 ? -1.0 : 1.0)); }
+static inline double sign_tsne(double x) { return (x == .0 ? .0 : (x < .0 ? -1.0 : 1.0)); }
 
 
 class TSNE

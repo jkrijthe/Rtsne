@@ -4,14 +4,17 @@
 To use this package use the following code in R to install the package and run a simple example.
 
 ```{R}
-install.packages("devtools") # If not already installed
-install_github("Rtsne","jkrijthe")
-
-library(Rtsne)
+install.packages("Rtsne") # Install Rtsne package from CRAN
+library(Rtsne) # Load package
 iris_unique <- unique(iris) # Remove duplicates
 tsne_out <- Rtsne(as.matrix(iris_unique[,1:4])) # Run TSNE
 plot(tsne_out$Y,col=iris$Species) # Plot the result
 ```
+
+To install the latest version from the github repository, use:
+```{R}
+install.packages("devtools") # If not already installed
+install_github("Rtsne","jkrijthe")
 
 #Details
 This R package offers a wrapper around the Barnes-Hut TSNE C++ implementation of [2] [3]. Only minor changes were made to the original code to allow it to function as an R package.

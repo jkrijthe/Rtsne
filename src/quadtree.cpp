@@ -35,6 +35,7 @@
 #include <R_ext/BLAS.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <cmath>
 #include <Rcpp.h>
 #include "quadtree.h"
 
@@ -70,8 +71,8 @@ QuadTree::QuadTree(double* inp_data, int N)
     for(int d = 0; d < QT_NO_DIMS; d++) mean_Y[d] /= (double) N;
     
     // Construct quadtree
-    init(NULL, inp_data, mean_Y[0], mean_Y[1], max(max_Y[0] - mean_Y[0], mean_Y[0] - min_Y[0]) + 1e-5,
-                                               max(max_Y[1] - mean_Y[1], mean_Y[1] - min_Y[1]) + 1e-5);
+    init(NULL, inp_data, mean_Y[0], mean_Y[1], max_tsne(max_Y[0] - mean_Y[0], mean_Y[0] - min_Y[0]) + 1e-5,
+                                               max_tsne(max_Y[1] - mean_Y[1], mean_Y[1] - min_Y[1]) + 1e-5);
     fill(N);
     delete[] mean_Y; delete[] max_Y; delete[] min_Y;
 }
@@ -312,9 +313,9 @@ int QuadTree::getAllIndices(int* indices, int loc)
 
 int QuadTree::getDepth() {
     if(is_leaf) return 1;
-    return 1 + max(max(northWest->getDepth(),
+    return 1 + max_tsne(max_tsne(northWest->getDepth(),
                        northEast->getDepth()),
-                   max(southWest->getDepth(),
+                   max_tsne(southWest->getDepth(),
                        southEast->getDepth()));
                    
 }
@@ -335,7 +336,7 @@ void QuadTree::computeNonEdgeForces(int point_index, double theta, double neg_f[
     for(int d = 0; d < QT_NO_DIMS; d++) D += buff[d] * buff[d];
     
     // Check whether we can use this node as a "summary"
-    if(is_leaf || max(boundary.hh, boundary.hw) / sqrt(D) < theta) {
+    if(is_leaf || max_tsne(boundary.hh, boundary.hw) / sqrt(D) < theta) {
     
         // Compute and add t-SNE force between point and current node
         double Q = 1.0 / (1.0 + D);

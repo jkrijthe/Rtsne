@@ -4,11 +4,12 @@
 #' 
 #' After checking the correctness of the input, this function does an initial reduction of the feature space using \code{\link{prcomp}} , before calling the C++ TSNE implementation.
 #' 
-#' @param X Data matrix
-#' @param initial_dims the number of dimensions that should be retained in the initial PCA step (default: 50)
-#' @param perplexity Perplexity parameter
-#' @param theta Speed/accuracy trade-off (increase for less accuracy) (default: 0.5)
-#' @param check_duplicates Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)
+#' @param X matrix; Data matrix
+#' @param dims integer; Output dimensionality (default: 2)
+#' @param initial_dims integer; the number of dimensions that should be retained in the initial PCA step (default: 50)
+#' @param perplexity numeric; Perplexity parameter
+#' @param theta numeric; Speed/accuracy trade-off (increase for less accuracy) (default: 0.5)
+#' @param check_duplicates logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)
 #' 
 #' @return list with the following elements:
 #' \item{Y}{Matrix constaining the new representations for the objects}
@@ -28,7 +29,7 @@
 #' @import Rcpp
 #' 
 #' @export
-Rtsne<-function(X, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE) {
+Rtsne<-function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE) {
   if (!is.numeric(theta) | (theta<=0.0) | (theta>1.0) ) { stop("Incorrect theta.")}
   if (nrow(X) - 1 < 3 * perplexity) { stop("Perplexity is too large.")}
   if (!is.matrix(X)) { stop("Input X is not a matrix")}
@@ -42,5 +43,5 @@ Rtsne<-function(X, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=T
   #apply pca:
   X <- prcomp(X,retx=TRUE)$x[,1:min(initial_dims,ncol(X))]
 
-  Rtsne_cpp(X,perplexity,theta)
+  Rtsne_cpp(X,dims,perplexity,theta)
 }

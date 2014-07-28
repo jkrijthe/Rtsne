@@ -2,19 +2,13 @@
 #include "tsne.h"
 using namespace Rcpp;
 
-// Below is a simple example of exporting a C++ function to R. You can
-// source this function into an R session using the Rcpp::sourceCpp 
-// function (or via the Source button on the editor toolbar)
-
-// For more on using Rcpp click the Help button on the editor toolbar
-
 // Function that runs the Barnes-Hut implementation of t-SNE
 // [[Rcpp::export]]
-Rcpp::List Rtsne_cpp(SEXP X_in, double perplexity_in, double theta_in) {
+Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in) {
 
   Rcpp::NumericMatrix X(X_in); 
 
-  int origN, N, D, no_dims = 2;
+  int origN, N, D, no_dims = no_dims_in;
 
 	double  *data;
   TSNE* tsne = new TSNE();
