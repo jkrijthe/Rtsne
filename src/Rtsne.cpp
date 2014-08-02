@@ -4,7 +4,7 @@ using namespace Rcpp;
 
 // Function that runs the Barnes-Hut implementation of t-SNE
 // [[Rcpp::export]]
-Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in) {
+Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in, int rand_seed) {
 
   Rcpp::NumericMatrix X(X_in); 
 
@@ -15,8 +15,8 @@ Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double the
   double perplexity = perplexity_in;
   double theta = theta_in;
 
-  origN=X.nrow();
-  D=X.ncol();
+  origN = X.nrow();
+  D = X.ncol();
     
 	data = (double*) calloc(D * origN, sizeof(double));
     if(data == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
@@ -25,7 +25,17 @@ Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double the
             data[i*D+j] = X(i,j);
         }
     }
-
+  
+    // Set random seed
+        if(rand_seed >= 0) {
+            Rprintf("Using random seed: %d\n", rand_seed);
+            srand((unsigned int) rand_seed);
+        }
+        else {
+            Rprintf("Using current time as random seed...\n");
+            srand(time(NULL));
+        } 
+    
     // Make dummy landmarks
     N = origN;
     Rprintf("Read the %i x %i data matrix successfully!\n", N, D);

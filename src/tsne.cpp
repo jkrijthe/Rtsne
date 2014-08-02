@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2013, Laurens van der Maaten (Delft University of Technology)
+ * Copyright (c) 2014, Laurens van der Maaten (Delft University of Technology)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,7 @@
 #include <cstring>
 #include <time.h>
 #include <Rcpp.h>
-#include "quadtree.h"
+#include "sptree.h"
 #include "vptree.h"
 #include "tsne.h"
 
@@ -159,8 +159,8 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
         if((iter > 0 && iter % 50 == 0) || iter == max_iter - 1) {
             end = clock();
             double C = .0;
-            if(exact) C = evaluateError(P, Y, N);
-            else      C = evaluateError(row_P, col_P, val_P, Y, N, theta);  // doing approximate computation here!
+            if(exact) C = evaluateError(P, Y, N, no_dims);
+            else      C = evaluateError(row_P, col_P, val_P, Y, N, no_dims, theta);  // doing approximate computation here!
             if(iter == 0)
                 Rprintf("Iteration %d: error is %f\n", iter + 1, C);
             else {
@@ -190,8 +190,8 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
 void TSNE::computeGradient(double* P, int* inp_row_P, int* inp_col_P, double* inp_val_P, double* Y, int N, int D, double* dC, double theta)
 {
     
-    // Construct quadtree on current map
-    QuadTree* tree = new QuadTree(Y, N);
+    // Construct space-partitioning tree on current map
+    SPTree* tree = new SPTree(D, Y, N);
     
     // Compute all terms required for t-SNE gradient
     double sum_Q = .0;
@@ -253,13 +253,13 @@ void TSNE::computeExactGradient(double* P, double* Y, int N, int D, double* dC) 
 
 
 // Evaluate t-SNE cost function (exactly)
-double TSNE::evaluateError(double* P, double* Y, int N) {
+double TSNE::evaluateError(double* P, double* Y, int N, int D) {
     
     // Compute the squared Euclidean distance matrix
     double* DD = (double*) malloc(N * N * sizeof(double));
-    double* Q  = (double*) malloc(N * N * sizeof(double));
+    double* Q = (double*) malloc(N * N * sizeof(double));
     if(DD == NULL || Q == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-    computeSquaredEuclideanDistance(Y, N, 2, DD);
+    computeSquaredEuclideanDistance(Y, N, D, DD);
     
     // Compute Q-matrix and normalization sum
     double sum_Q = DBL_MIN;
@@ -289,13 +289,12 @@ double TSNE::evaluateError(double* P, double* Y, int N) {
 }
 
 // Evaluate t-SNE cost function (approximately)
-double TSNE::evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int N, double theta)
+double TSNE::evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int N, int D, double theta)
 {
     
     // Get estimate of normalization term
-    const int QT_NO_DIMS = 2;
-    QuadTree* tree = new QuadTree(Y, N);
-    double buff[QT_NO_DIMS] = {.0, .0};
+    SPTree* tree = new SPTree(D, Y, N);
+    double* buff = (double*) calloc(D, sizeof(double));
     double sum_Q = .0;
     for(int n = 0; n < N; n++) tree->computeNonEdgeForces(n, theta, buff, &sum_Q);
     
@@ -303,19 +302,20 @@ double TSNE::evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int
     int ind1, ind2;
     double C = .0, Q;
     for(int n = 0; n < N; n++) {
-        ind1 = n * QT_NO_DIMS;
+        ind1 = n * D;
         for(int i = row_P[n]; i < row_P[n + 1]; i++) {
             Q = .0;
-            ind2 = col_P[i] * QT_NO_DIMS;
-            for(int d = 0; d < QT_NO_DIMS; d++) buff[d]  = Y[ind1 + d];
-            for(int d = 0; d < QT_NO_DIMS; d++) buff[d] -= Y[ind2 + d];
-            for(int d = 0; d < QT_NO_DIMS; d++) Q += buff[d] * buff[d];
+            ind2 = col_P[i] * D;
+            for(int d = 0; d < D; d++) buff[d]  = Y[ind1 + d];
+            for(int d = 0; d < D; d++) buff[d] -= Y[ind2 + d];
+            for(int d = 0; d < D; d++) Q += buff[d] * buff[d];
             Q = (1.0 / (1.0 + Q)) / sum_Q;
             C += val_P[i] * log((val_P[i] + FLT_MIN) / (Q + FLT_MIN));
         }
     }
     
     // Clean up memory
+    free(buff);
     delete tree;
     return C;
 }
@@ -803,7 +803,7 @@ double TSNE::randn() {
 
 // Function that loads data from a t-SNE file
 // Note: this function does a malloc that should be freed elsewhere
-bool TSNE::load_data(double** data, int* n, int* d, double* theta, double* perplexity) {
+bool TSNE::load_data(double** data, int* n, int* d, int* no_dims, double* theta, double* perplexity, int* rand_seed) {
 	
 	// Open file, read first 2 integers, allocate memory, and read the data
     FILE *h;
@@ -815,10 +815,12 @@ bool TSNE::load_data(double** data, int* n, int* d, double* theta, double* perpl
 	fread(d, sizeof(int), 1, h);											// original dimensionality
     fread(theta, sizeof(double), 1, h);										// gradient accuracy
 	fread(perplexity, sizeof(double), 1, h);								// perplexity
+  fread(no_dims, sizeof(int), 1, h);                                      // output dimensionality
 	*data = (double*) calloc(*d * *n, sizeof(double));
     if(*data == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     fread(*data, sizeof(double), *n * *d, h);                               // the data
-	fclose(h);
+	if(!feof(h)) fread(rand_seed, sizeof(int), 1, h);                       // random seed
+  fclose(h);
 	Rprintf("Read the %i x %i data matrix successfully!\n", *n, *d);
 	return true;
 }

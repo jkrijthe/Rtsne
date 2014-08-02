@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2013, Laurens van der Maaten (Delft University of Technology)
+ * Copyright (c) 2014, Laurens van der Maaten (Delft University of Technology)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

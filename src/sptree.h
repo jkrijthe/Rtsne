@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2013, Laurens van der Maaten (Delft University of Technology)
+ * Copyright (c) 2014, Laurens van der Maaten (Delft University of Technology)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,65 +31,72 @@
  */
 
 
-#ifndef QUADTREE_H
-#define QUADTREE_H
+#ifndef SPTREE_H
+#define SPTREE_H
 
 using namespace std;
 
 //static inline double min(double x, double y) { return (x <= y ? x : y); }
+//static inline double max(double x, double y) { return (x <= y ? y : x); }
 static inline double max_tsne(double x, double y) { return (x <= y ? y : x); }
-//static inline double abs(double x) { return (x < .0 ? -x : x); }
 
 class Cell {
+
+    int dimension;
+    double* corner;
+    double* width;
+    
     
 public:
-    double x;
-    double y;
-    double hw;
-    double hh;
-    bool   containsPoint(double point[]);
+    Cell(int inp_dimension);
+    Cell(int inp_dimension, double* inp_corner, double* inp_width);
+    ~Cell();
+    
+    double getCorner(int d);
+    double getWidth(int d);
+    void setCorner(int d, double val);
+    void setWidth(int d, double val);
+    bool containsPoint(double point[]);
 };
 
 
-class QuadTree
+class SPTree
 {
     
     // Fixed constants    
-    static const int QT_NO_DIMS = 2;
     static const int QT_NODE_CAPACITY = 1;
 
     // A buffer we use when doing force computations
-    double buff[QT_NO_DIMS];
+    double* buff;
     
     // Properties of this node in the tree
-    QuadTree* parent;
+    SPTree* parent;
+    int dimension;
     bool is_leaf;
     int size;
     int cum_size;
         
     // Axis-aligned bounding box stored as a center with half-dimensions to represent the boundaries of this quad tree
-    Cell boundary;
+    Cell* boundary;
     
-    // Indices in this quad tree node, corresponding center-of-mass, and list of all children
+    // Indices in this space-partitioning tree node, corresponding center-of-mass, and list of all children
     double* data;
-    double center_of_mass[QT_NO_DIMS];
+    double* center_of_mass;
     int index[QT_NODE_CAPACITY];
     
     // Children
-    QuadTree* northWest;
-    QuadTree* northEast;
-    QuadTree* southWest;
-    QuadTree* southEast;
+    SPTree** children;
+    int no_children;
     
 public:
-    QuadTree(double* inp_data, int N);
-    QuadTree(double* inp_data, double inp_x, double inp_y, double inp_hw, double inp_hh);
-    QuadTree(double* inp_data, int N, double inp_x, double inp_y, double inp_hw, double inp_hh);
-    QuadTree(QuadTree* inp_parent, double* inp_data, int N, double inp_x, double inp_y, double inp_hw, double inp_hh);
-    QuadTree(QuadTree* inp_parent, double* inp_data, double inp_x, double inp_y, double inp_hw, double inp_hh);
-    ~QuadTree();
+    SPTree(int D, double* inp_data, int N);
+    SPTree(int D, double* inp_data, double* inp_corner, double* inp_width);
+    SPTree(int D, double* inp_data, int N, double* inp_corner, double* inp_width);
+    SPTree(SPTree* inp_parent, int D, double* inp_data, int N, double* inp_corner, double* inp_width);
+    SPTree(SPTree* inp_parent, int D, double* inp_data, double* inp_corner, double* inp_width);
+    ~SPTree();
     void setData(double* inp_data);
-    QuadTree* getParent();
+    SPTree* getParent();
     void construct(Cell boundary);
     bool insert(int new_index);
     void subdivide();
@@ -102,7 +109,7 @@ public:
     void print();
     
 private:
-    void init(QuadTree* inp_parent, double* inp_data, double inp_x, double inp_y, double inp_hw, double inp_hh);
+    void init(SPTree* inp_parent, int D, double* inp_data, double* inp_corner, double* inp_width);
     void fill(int N);
     int getAllIndices(int* indices, int loc);
     bool isChild(int test_index, int start, int end);

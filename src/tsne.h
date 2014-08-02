@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (c) 2013, Laurens van der Maaten (Delft University of Technology)
+ * Copyright (c) 2014, Laurens van der Maaten (Delft University of Technology)
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@ class TSNE
 {    
 public:
     void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta);
-    bool load_data(double** data, int* n, int* d, double* theta, double* perplexity);
+    bool load_data(double** data, int* n, int* d, int* no_dims, double* theta, double* perplexity, int* rand_seed);
     void save_data(double* data, int* landmarks, double* costs, int n, int d);
 
     void symmetrizeMatrix(int** row_P, int** col_P, double** val_P, int N); // should be static?!
@@ -51,8 +51,8 @@ public:
 private:
     void computeGradient(double* P, int* inp_row_P, int* inp_col_P, double* inp_val_P, double* Y, int N, int D, double* dC, double theta);
     void computeExactGradient(double* P, double* Y, int N, int D, double* dC);
-    double evaluateError(double* P, double* Y, int N);
-    double evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int N, double theta);
+    double evaluateError(double* P, double* Y, int N, int D);
+    double evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int N, int D, double theta);
     void zeroMean(double* X, int N, int D);
     void computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity);
     void computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K);

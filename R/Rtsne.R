@@ -10,9 +10,11 @@
 #' @param perplexity numeric; Perplexity parameter
 #' @param theta numeric; Speed/accuracy trade-off (increase for less accuracy) (default: 0.5)
 #' @param check_duplicates logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)
+#' @param pca logical; Whether an initial PCA step should be performed (default: TRUE)
+#' @param rand_seed integer; Random seed used. Negative values cause the seed to be set by current system time (default: -1) 
 #' 
 #' @return list with the following elements:
-#' \item{Y}{Matrix constaining the new representations for the objects}
+#' \item{Y}{Matrix containing the new representations for the objects}
 #' \item{N}{Number of objects}
 #' \item{origD}{Original Dimensionality before TSNE}
 #' \item{perplexity}{See above}
@@ -29,7 +31,7 @@
 #' @import Rcpp
 #' 
 #' @export
-Rtsne<-function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE) {
+Rtsne<-function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE, rand_seed=-1) {
   if (!is.numeric(theta) | (theta<=0.0) | (theta>1.0) ) { stop("Incorrect theta.")}
   if (nrow(X) - 1 < 3 * perplexity) { stop("Perplexity is too large.")}
   if (!is.matrix(X)) { stop("Input X is not a matrix")}
@@ -40,8 +42,10 @@ Rtsne<-function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_dupl
     if (any(duplicated(X))) { stop("Remove duplicates before running TSNE.") }
   }
   
-  #apply pca:
-  X <- prcomp(X,retx=TRUE)$x[,1:min(initial_dims,ncol(X))]
-
-  Rtsne_cpp(X,dims,perplexity,theta)
+  # Apply PCA
+  if (pca) {
+    X <- prcomp(X,retx=TRUE)$x[,1:min(initial_dims,ncol(X))]
+  }
+  
+  Rtsne_cpp(X,dims,perplexity,theta,rand_seed)
 }

@@ -4,7 +4,7 @@
 \title{Barnes-Hut implementation of t-Distributed Stochastic Neighbor Embedding}
 \usage{
 Rtsne(X, dims = 2, initial_dims = 50, perplexity = 30, theta = 0.5,
-  check_duplicates = TRUE)
+  check_duplicates = TRUE, pca = TRUE, rand_seed = -1)
 }
 \arguments{
 \item{X}{matrix; Data matrix}
@@ -18,10 +18,14 @@ Rtsne(X, dims = 2, initial_dims = 50, perplexity = 30, theta = 0.5,
 \item{theta}{numeric; Speed/accuracy trade-off (increase for less accuracy) (default: 0.5)}
 
 \item{check_duplicates}{logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)}
+
+\item{pca}{logical; Whether an initial PCA step should be performed (default: TRUE)}
+
+\item{rand_seed}{integer; Random seed used. Negative values cause the seed to be set by current system time (default: -1)}
 }
 \value{
 list with the following elements:
-\item{Y}{Matrix constaining the new representations for the objects}
+\item{Y}{Matrix containing the new representations for the objects}
 \item{N}{Number of objects}
 \item{origD}{Original Dimensionality before TSNE}
 \item{perplexity}{See above}
