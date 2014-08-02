@@ -14,6 +14,7 @@ plot(tsne_out$Y,col=iris$Species) # Plot the result
 To install the latest version from the github repository, use:
 ```{R}
 install.packages("devtools") # If not already installed
+library(devtools)
 install_github("Rtsne","jkrijthe")
 ```
 
