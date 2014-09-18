@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // Rtsne_cpp
-Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in, int rand_seed);
-RcppExport SEXP Rtsne_Rtsne_cpp(SEXP X_inSEXP, SEXP no_dims_inSEXP, SEXP perplexity_inSEXP, SEXP theta_inSEXP, SEXP rand_seedSEXP) {
+Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in);
+RcppExport SEXP Rtsne_Rtsne_cpp(SEXP X_inSEXP, SEXP no_dims_inSEXP, SEXP perplexity_inSEXP, SEXP theta_inSEXP) {
 BEGIN_RCPP
     SEXP __sexp_result;
     {
@@ -16,8 +16,7 @@ BEGIN_RCPP
         Rcpp::traits::input_parameter< int >::type no_dims_in(no_dims_inSEXP );
         Rcpp::traits::input_parameter< double >::type perplexity_in(perplexity_inSEXP );
         Rcpp::traits::input_parameter< double >::type theta_in(theta_inSEXP );
-        Rcpp::traits::input_parameter< int >::type rand_seed(rand_seedSEXP );
-        Rcpp::List __result = Rtsne_cpp(X_in, no_dims_in, perplexity_in, theta_in, rand_seed);
+        Rcpp::List __result = Rtsne_cpp(X_in, no_dims_in, perplexity_in, theta_in);
         PROTECT(__sexp_result = Rcpp::wrap(__result));
     }
     UNPROTECT(1);

@@ -789,10 +789,11 @@ void TSNE::zeroMean(double* X, int N, int D) {
 
 // Generates a Gaussian random number
 double TSNE::randn() {
+  Rcpp::RNGScope scope;
 	double x, y, radius;
 	do {
-		x = 2 * (rand() / ((double) RAND_MAX + 1)) - 1;
-		y = 2 * (rand() / ((double) RAND_MAX + 1)) - 1;
+		x = 2 * (double)R::runif(0,1) - 1;
+		y = 2 * (double)R::runif(0,1) - 1;
 		radius = (x * x) + (y * y);
 	} while((radius >= 1.0) || (radius == 0.0));
 	radius = sqrt(-2 * log(radius) / radius);

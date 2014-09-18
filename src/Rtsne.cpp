@@ -4,7 +4,7 @@ using namespace Rcpp;
 
 // Function that runs the Barnes-Hut implementation of t-SNE
 // [[Rcpp::export]]
-Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in, int rand_seed) {
+Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in) {
 
   Rcpp::NumericMatrix X(X_in); 
 
@@ -26,15 +26,15 @@ Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double the
         }
     }
   
-    // Set random seed
-        if(rand_seed >= 0) {
-            Rprintf("Using random seed: %d\n", rand_seed);
-            srand((unsigned int) rand_seed);
-        }
-        else {
-            Rprintf("Using current time as random seed...\n");
-            srand(time(NULL));
-        } 
+    // Set random seed (now done using R's RNG)
+//        if(rand_seed >= 0) {
+//            Rprintf("Using random seed: %d\n", rand_seed);
+//            srand((unsigned int) rand_seed);
+//        }
+//        else {
+//            Rprintf("Using current time as random seed...\n");
+//            srand(time(NULL));
+//        } 
     
     // Make dummy landmarks
     N = origN;
