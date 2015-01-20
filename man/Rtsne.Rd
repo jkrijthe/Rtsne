@@ -21,6 +21,8 @@ Rtsne(X, dims = 2, initial_dims = 50, perplexity = 30, theta = 0.5,
 \item{check_duplicates}{logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)}
 
 \item{pca}{logical; Whether an initial PCA step should be performed (default: TRUE)}
+
+\item{verbose}{logical; Whether progress updates should be printed (default: FALSE)}
 }
 \value{
 List with the following elements:
@@ -39,7 +41,9 @@ After checking the correctness of the input, this function (optionally) does an 
 \examples{
 iris_unique <- unique(iris) # Remove duplicates
 tsne_out <- Rtsne(as.matrix(iris_unique[,1:4])) # Run TSNE
-plot(tsne_out$Y,col=iris$Species) # Plot the result
+
+# Show the objects in the 2D tsne representation
+plot(tsne_out$Y,col=iris$Species)
 }
 \references{
 L.J.P. van der Maaten. Barnes-Hut-SNE. In Proceedings of the International Conference on Learning Representations, 2013.

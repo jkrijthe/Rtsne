@@ -11,6 +11,7 @@
 #' @param theta numeric; Speed/accuracy trade-off (increase for less accuracy) (default: 0.5)
 #' @param check_duplicates logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)
 #' @param pca logical; Whether an initial PCA step should be performed (default: TRUE)
+#' @param verbose logical; Whether progress updates should be printed (default: FALSE)
 #' 
 #' @return List with the following elements:
 #' \item{Y}{Matrix containing the new representations for the objects}
@@ -24,7 +25,9 @@
 #' @examples
 #' iris_unique <- unique(iris) # Remove duplicates
 #' tsne_out <- Rtsne(as.matrix(iris_unique[,1:4])) # Run TSNE
-#' plot(tsne_out$Y,col=iris$Species) # Plot the result
+#' 
+#' # Show the objects in the 2D tsne representation
+#' plot(tsne_out$Y,col=iris$Species) 
 #' 
 #' @useDynLib Rtsne
 #' @import Rcpp
