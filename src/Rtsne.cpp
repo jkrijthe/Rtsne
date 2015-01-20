@@ -4,7 +4,7 @@ using namespace Rcpp;
 
 // Function that runs the Barnes-Hut implementation of t-SNE
 // [[Rcpp::export]]
-Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in) {
+Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in, bool verbose) {
 
   Rcpp::NumericMatrix X(X_in); 
 
@@ -38,7 +38,7 @@ Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double the
     
     // Make dummy landmarks
     N = origN;
-    Rprintf("Read the %i x %i data matrix successfully!\n", N, D);
+    if (verbose) Rprintf("Read the %i x %i data matrix successfully!\n", N, D);
     int* landmarks = (int*) malloc(N * sizeof(int));
     if(landmarks == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     for(int n = 0; n < N; n++) landmarks[n] = n;
@@ -48,7 +48,7 @@ Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double the
     if(Y == NULL || costs == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     
     // Run tsne
-		tsne->run(data, N, D, Y, no_dims, perplexity, theta);
+		tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose);
 
   	// Save the results
     Rcpp::NumericMatrix Yr(N,no_dims);

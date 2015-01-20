@@ -2,7 +2,7 @@
 #' 
 #' Wrapper for the C++ implementation of Barnes-Hut t-Distributed Stochastic Neighbor Embedding
 #' 
-#' After checking the correctness of the input, this function (optionally) does an initial reduction of the feature space using \code{\link{prcomp}}, before calling the C++ TSNE implementation. Since R's random number generator is used, use \code{\link{set.seed}} before the function call to get reproducable results.
+#' After checking the correctness of the input, this function (optionally) does an initial reduction of the feature space using \code{\link{prcomp}}, before calling the C++ TSNE implementation. Since R's random number generator is used, use \code{\link{set.seed}} before the function call to get reproducible results.
 #' 
 #' @param X matrix; Data matrix
 #' @param dims integer; Output dimensionality (default: 2)
@@ -30,13 +30,13 @@
 #' @import Rcpp
 #' 
 #' @export
-Rtsne<-function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE) {
-  if (!is.numeric(theta) | (theta<=0.0) | (theta>1.0) ) { stop("Incorrect theta.")}
+Rtsne<-bhtsne<-function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,verbose=FALSE) {
+  if (!is.numeric(theta) || (theta<=0.0) || (theta>1.0) ) { stop("Incorrect theta.")}
   if (nrow(X) - 1 < 3 * perplexity) { stop("Perplexity is too large.")}
   if (!is.matrix(X)) { stop("Input X is not a matrix")}
   
   is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
-  if (!is.wholenumber(initial_dims) | initial_dims<=0) { stop("Incorrect initial dimensionality.")}
+  if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
   if (check_duplicates){
     if (any(duplicated(X))) { stop("Remove duplicates before running TSNE.") }
   }
@@ -46,5 +46,5 @@ Rtsne<-function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_dupl
     X <- prcomp(X,retx=TRUE)$x[,1:min(initial_dims,ncol(X))]
   }
   
-  Rtsne_cpp(X,dims,perplexity,theta)
+  Rtsne_cpp(X,dims,perplexity,theta,verbose)
 }
