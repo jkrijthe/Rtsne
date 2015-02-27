@@ -16,7 +16,7 @@ Rtsne(X, dims = 2, initial_dims = 50, perplexity = 30, theta = 0.5,
 
 \item{perplexity}{numeric; Perplexity parameter}
 
-\item{theta}{numeric; Speed/accuracy trade-off (increase for less accuracy) (default: 0.5)}
+\item{theta}{numeric; Speed/accuracy trade-off (increase for less accuracy), set to 0.0 for exact TSNE (default: 0.5)}
 
 \item{check_duplicates}{logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)}
 
