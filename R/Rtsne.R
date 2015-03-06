@@ -11,6 +11,7 @@
 #' @param theta numeric; Speed/accuracy trade-off (increase for less accuracy), set to 0.0 for exact TSNE (default: 0.5)
 #' @param check_duplicates logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)
 #' @param pca logical; Whether an initial PCA step should be performed (default: TRUE)
+#' @param max_iter; Maximum number of iterations (default: 1000)
 #' @param verbose logical; Whether progress updates should be printed (default: FALSE)
 #' 
 #' @return List with the following elements:
@@ -33,10 +34,11 @@
 #' @import Rcpp
 #' 
 #' @export
-Rtsne <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,verbose=FALSE) {
+Rtsne <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,max_iter=1000,verbose=FALSE) {
   if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("Incorrect theta.")}
   if (nrow(X) - 1 < 3 * perplexity) { stop("Perplexity is too large.")}
   if (!is.matrix(X)) { stop("Input X is not a matrix")}
+  if (!(max_iter>0)) { stop("Incorrect number of iterations.")}
   
   is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
@@ -49,5 +51,5 @@ Rtsne <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_du
     X <- prcomp(X,retx=TRUE)$x[,1:min(initial_dims,ncol(X))]
   }
   
-  Rtsne_cpp(X,dims,perplexity,theta,verbose)
+  Rtsne_cpp(X,dims,perplexity,theta,verbose, max_iter)
 }
