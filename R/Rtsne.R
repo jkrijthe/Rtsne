@@ -28,7 +28,7 @@
 #' tsne_out <- Rtsne(as.matrix(iris_unique[,1:4])) # Run TSNE
 #' 
 #' # Show the objects in the 2D tsne representation
-#' plot(tsne_out$Y,col=iris$Species) 
+#' plot(tsne_out$Y,col=iris_unique$Species) 
 #' 
 #' @useDynLib Rtsne
 #' @import Rcpp

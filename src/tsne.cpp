@@ -52,7 +52,7 @@ extern "C" {
 using namespace std;
 
 // Perform t-SNE
-void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter) {
+void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* cost) {
     
     // Determine whether we are using an exact algorithm
     if(N - 1 < 3 * perplexity) { Rcpp::stop("Perplexity too large for the number of data points!\n"); }
@@ -174,6 +174,10 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
         }
     }
     end = clock(); total_time += (float) (end - start) / CLOCKS_PER_SEC;
+    
+    if(exact) getCost(P, Y, N, no_dims, cost);
+    else      getCost(row_P, col_P, val_P, Y, N, no_dims, theta, cost);  // doing approximate computation here!
+    
     
     // Clean up memory
     free(dY);
@@ -321,6 +325,73 @@ double TSNE::evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int
     free(buff);
     delete tree;
     return C;
+}
+
+// Evaluate t-SNE cost function (exactly)
+void TSNE::getCost(double* P, double* Y, int N, int D, double* costs) {
+  
+  // Compute the squared Euclidean distance matrix
+  double* DD = (double*) malloc(N * N * sizeof(double));
+  double* Q = (double*) malloc(N * N * sizeof(double));
+  if(DD == NULL || Q == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
+  computeSquaredEuclideanDistance(Y, N, D, DD);
+  
+  // Compute Q-matrix and normalization sum
+  double sum_Q = DBL_MIN;
+  for(int n = 0; n < N; n++) {
+    for(int m = 0; m < N; m++) {
+      if(n != m) {
+        Q[n * N + m] = 1 / (1 + DD[n * N + m]);
+        sum_Q += Q[n * N + m];
+      }
+      else Q[n * N + m] = DBL_MIN;
+    }
+  }
+  for(int i = 0; i < N * N; i++) Q[i] /= sum_Q;
+  
+  // Sum t-SNE error
+  for(int n = 0; n < N; n++) {
+    costs[n] = 0.0;
+    for(int m = 0; m < N; m++) {
+      costs[n] += P[n * N + m] * log((P[n * N + m] + 1e-9) / (Q[n * N + m] + 1e-9));
+    }
+  }
+  
+  // Clean up memory
+  free(DD);
+  free(Q);
+}
+
+// Evaluate t-SNE cost function (approximately)
+void TSNE::getCost(int* row_P, int* col_P, double* val_P, double* Y, int N, int D, double theta, double* costs)
+{
+  
+  // Get estimate of normalization term
+  SPTree* tree = new SPTree(D, Y, N);
+  double* buff = (double*) calloc(D, sizeof(double));
+  double sum_Q = .0;
+  for(int n = 0; n < N; n++) tree->computeNonEdgeForces(n, theta, buff, &sum_Q);
+  
+  // Loop over all edges to compute t-SNE error
+  int ind1, ind2;
+  double  Q;
+  for(int n = 0; n < N; n++) {
+    ind1 = n * D;
+    costs[n] = 0.0;
+    for(int i = row_P[n]; i < row_P[n + 1]; i++) {
+      Q = .0;
+      ind2 = col_P[i] * D;
+      for(int d = 0; d < D; d++) buff[d]  = Y[ind1 + d];
+      for(int d = 0; d < D; d++) buff[d] -= Y[ind2 + d];
+      for(int d = 0; d < D; d++) Q += buff[d] * buff[d];
+      Q = (1.0 / (1.0 + Q)) / sum_Q;
+      costs[n] += val_P[i] * log((val_P[i] + FLT_MIN) / (Q + FLT_MIN));
+    }
+  }
+  
+  // Clean up memory
+  free(buff);
+  delete tree;
 }
 
 

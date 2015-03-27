@@ -41,7 +41,7 @@ static inline double sign_tsne(double x) { return (x == .0 ? .0 : (x < .0 ? -1.0
 class TSNE
 {    
 public:
-    void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter);
+    void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* costs);
     bool load_data(double** data, int* n, int* d, int* no_dims, double* theta, double* perplexity, int* rand_seed);
     void save_data(double* data, int* landmarks, double* costs, int n, int d);
 
@@ -53,6 +53,8 @@ private:
     void computeExactGradient(double* P, double* Y, int N, int D, double* dC);
     double evaluateError(double* P, double* Y, int N, int D);
     double evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int N, int D, double theta);
+    void getCost(double* P, double* Y, int N, int D, double* costs);
+    void getCost(int* row_P, int* col_P, double* val_P, double* Y, int N, int D, double theta, double* costs);
     void zeroMean(double* X, int N, int D);
     void computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity);
     void computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K, bool verbose);

@@ -9,19 +9,15 @@ using namespace Rcpp;
 Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in, bool verbose, int max_iter);
 RcppExport SEXP Rtsne_Rtsne_cpp(SEXP X_inSEXP, SEXP no_dims_inSEXP, SEXP perplexity_inSEXP, SEXP theta_inSEXP, SEXP verboseSEXP, SEXP max_iterSEXP) {
 BEGIN_RCPP
-    SEXP __sexp_result;
-    {
-        Rcpp::RNGScope __rngScope;
-        Rcpp::traits::input_parameter< SEXP >::type X_in(X_inSEXP );
-        Rcpp::traits::input_parameter< int >::type no_dims_in(no_dims_inSEXP );
-        Rcpp::traits::input_parameter< double >::type perplexity_in(perplexity_inSEXP );
-        Rcpp::traits::input_parameter< double >::type theta_in(theta_inSEXP );
-        Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP );
-        Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP );
-        Rcpp::List __result = Rtsne_cpp(X_in, no_dims_in, perplexity_in, theta_in, verbose, max_iter);
-        PROTECT(__sexp_result = Rcpp::wrap(__result));
-    }
-    UNPROTECT(1);
-    return __sexp_result;
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< SEXP >::type X_in(X_inSEXP);
+    Rcpp::traits::input_parameter< int >::type no_dims_in(no_dims_inSEXP);
+    Rcpp::traits::input_parameter< double >::type perplexity_in(perplexity_inSEXP);
+    Rcpp::traits::input_parameter< double >::type theta_in(theta_inSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    __result = Rcpp::wrap(Rtsne_cpp(X_in, no_dims_in, perplexity_in, theta_in, verbose, max_iter));
+    return __result;
 END_RCPP
 }

@@ -48,7 +48,7 @@ Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double the
     if(Y == NULL || costs == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     
     // Run tsne
-		tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter);
+		tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs);
 
   	// Save the results
     Rcpp::NumericMatrix Yr(N,no_dims);
