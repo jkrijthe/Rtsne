@@ -5,7 +5,8 @@
 \title{Barnes-Hut implementation of t-Distributed Stochastic Neighbor Embedding}
 \usage{
 Rtsne(X, dims = 2, initial_dims = 50, perplexity = 30, theta = 0.5,
-  check_duplicates = TRUE, pca = TRUE, max_iter = 1000, verbose = FALSE)
+  check_duplicates = TRUE, pca = TRUE, max_iter = 1000, verbose = FALSE,
+  is_distance = FALSE)
 }
 \arguments{
 \item{X}{matrix; Data matrix}
@@ -23,6 +24,8 @@ Rtsne(X, dims = 2, initial_dims = 50, perplexity = 30, theta = 0.5,
 \item{pca}{logical; Whether an initial PCA step should be performed (default: TRUE)}
 
 \item{verbose}{logical; Whether progress updates should be printed (default: FALSE)}
+
+\item{is_distance}{logical; Indicate whether X is a distance matrix (experimental, default: FALSE)}
 
 \item{max_iter;}{Maximum number of iterations (default: 1000)}
 }

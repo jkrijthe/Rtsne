@@ -92,6 +92,11 @@ double euclidean_distance(const DataPoint &t1, const DataPoint &t2) {
     return sqrt(dd);
 }
 
+double precomputed_distance(const DataPoint &t1, const DataPoint &t2) {
+  double dd = .0;
+  dd = t1.x(t2.index());
+  return dd;
+}
 
 template<typename T, double (*distance)( const T&, const T& )>
 class VpTree

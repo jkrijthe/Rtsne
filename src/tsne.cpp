@@ -52,7 +52,7 @@ extern "C" {
 using namespace std;
 
 // Perform t-SNE
-void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* cost) {
+void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* cost, bool distance_precomputed) {
     
     // Determine whether we are using an exact algorithm
     if(N - 1 < 3 * perplexity) { Rcpp::stop("Perplexity too large for the number of data points!\n"); }
@@ -62,9 +62,9 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     // Set learning parameters
     float total_time = .0;
     clock_t start, end;
-	int stop_lying_iter = 250, mom_switch_iter = 250;
-	double momentum = .5, final_momentum = .8;
-	double eta = 200.0;
+	  int stop_lying_iter = 250, mom_switch_iter = 250;
+	  double momentum = .5, final_momentum = .8;
+	  double eta = 200.0;
     
     // Allocate some memory
     double* dY    = (double*) malloc(N * no_dims * sizeof(double));
@@ -77,12 +77,15 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     // Normalize input data (to prevent numerical problems)
     if (verbose) Rprintf("Computing input similarities...\n");
     start = clock();
-    zeroMean(X, N, D);
-    double max_X = .0;
-    for(int i = 0; i < N * D; i++) {
-        if(X[i] > max_X) max_X = X[i];
+    if (!distance_precomputed) {
+      if (verbose) Rprintf("Normalizing input...\n");
+      zeroMean(X, N, D);
+      double max_X = .0;
+      for(int i = 0; i < N * D; i++) {
+          if(X[i] > max_X) max_X = X[i];
+      }
+      for(int i = 0; i < N * D; i++) X[i] /= max_X;
     }
-    for(int i = 0; i < N * D; i++) X[i] /= max_X;
     
     // Compute input similarities for exact t-SNE
     double* P; int* row_P; int* col_P; double* val_P;
@@ -91,7 +94,7 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
         // Compute similarities
         P = (double*) malloc(N * N * sizeof(double));
         if(P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-        computeGaussianPerplexity(X, N, D, P, perplexity);
+        computeGaussianPerplexity(X, N, D, P, perplexity, distance_precomputed);
     
         // Symmetrize input similarities
         if (verbose) Rprintf("Symmetrizing...\n");
@@ -110,7 +113,7 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     else {
     
         // Compute asymmetric pairwise input similarities
-        computeGaussianPerplexity(X, N, D, &row_P, &col_P, &val_P, perplexity, (int) (3 * perplexity), verbose);
+        computeGaussianPerplexity(X, N, D, &row_P, &col_P, &val_P, perplexity, (int) (3 * perplexity), verbose, distance_precomputed);
         
         // Symmetrize input similarities
         symmetrizeMatrix(&row_P, &col_P, &val_P, N);
@@ -396,12 +399,25 @@ void TSNE::getCost(int* row_P, int* col_P, double* val_P, double* Y, int N, int 
 
 
 // Compute input similarities with a fixed perplexity
-void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity) {
+void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity, bool distance_precomputed) {
 	
 	// Compute the squared Euclidean distance matrix
 	double* DD = (double*) malloc(N * N * sizeof(double));
     if(DD == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-	computeSquaredEuclideanDistance(X, N, D, DD);
+	
+	if (distance_precomputed) {
+	  DD = X;
+	} else {
+	  computeSquaredEuclideanDistance(X, N, D, DD);
+	}
+	
+	Rprintf(" %4.4f \n", DD[0]);
+	Rprintf(" %4.4f \n", DD[1]);
+	Rprintf(" %4.4f \n", DD[2]);
+	
+	Rprintf(" %4.4f \n", X[0]);
+	Rprintf(" %4.4f \n", X[1]);
+	Rprintf(" %4.4f \n", X[2]);
 	
 	// Compute the Gaussian kernel row by row
 	for(int n = 0; n < N; n++) {
@@ -460,12 +476,13 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double 
 	}
 	
 	// Clean up memory
-	free(DD); DD = NULL;
+	if (!distance_precomputed) { free(DD); }
+	DD = NULL;
 }
 
 
 // Compute input similarities with a fixed perplexity using ball trees (this function allocates memory another function should free)
-void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K, bool verbose) {
+void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K, bool verbose, bool distance_precomputed) {
     
     if(perplexity > K) Rprintf("Perplexity should be lower than K!\n");
     
@@ -483,16 +500,18 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int*
     for(int n = 0; n < N; n++) row_P[n + 1] = row_P[n] + K;    
     
     // Build ball tree on data set
-    VpTree<DataPoint, euclidean_distance>* tree = new VpTree<DataPoint, euclidean_distance>();
-    vector<DataPoint> obj_X(N, DataPoint(D, -1, X));
-    for(int n = 0; n < N; n++) obj_X[n] = DataPoint(D, n, X + n * D);
-    tree->create(obj_X);
     
-    // Loop over all points to find nearest neighbors
-    if (verbose) Rprintf("Building tree...\n");
-    vector<DataPoint> indices;
-    vector<double> distances;
-    for(int n = 0; n < N; n++) {
+    if (distance_precomputed) {
+      VpTree<DataPoint, precomputed_distance>* tree = new VpTree<DataPoint, precomputed_distance>();
+      vector<DataPoint> obj_X(N, DataPoint(D, -1, X));
+      for(int n = 0; n < N; n++) obj_X[n] = DataPoint(D, n, X + n * D);
+      tree->create(obj_X);
+      
+      // Loop over all points to find nearest neighbors
+      if (verbose) Rprintf("Building tree...\n");
+      vector<DataPoint> indices;
+      vector<double> distances;
+      for(int n = 0; n < N; n++) {
         
         if(n % 10000 == 0 && verbose) Rprintf(" - point %d of %d\n", n, N);
         
@@ -502,64 +521,143 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int*
         tree->search(obj_X[n], K + 1, &indices, &distances);
         
         // Initialize some variables for binary search
-		bool found = false;
-		double beta = 1.0;
-		double min_beta = -DBL_MAX;
-		double max_beta =  DBL_MAX;
-		double tol = 1e-5;
-		
-		// Iterate until we found a good perplexity
-		int iter = 0; double sum_P;
-		while(!found && iter < 200) {
-			
-			// Compute Gaussian kernel row
-			for(int m = 0; m < K; m++) cur_P[m] = exp(-beta * distances[m + 1]);
-			
-			// Compute entropy of current row
-			sum_P = DBL_MIN;
-			for(int m = 0; m < K; m++) sum_P += cur_P[m];
-			double H = .0;
-			for(int m = 0; m < K; m++) H += beta * (distances[m + 1] * cur_P[m]);
-			H = (H / sum_P) + log(sum_P);
-			
-			// Evaluate whether the entropy is within the tolerance level
-			double Hdiff = H - log(perplexity);
-			if(Hdiff < tol && -Hdiff < tol) {
-				found = true;
-			}
-			else {
-				if(Hdiff > 0) {
-					min_beta = beta;
-					if(max_beta == DBL_MAX || max_beta == -DBL_MAX)
-						beta *= 2.0;
-					else
-						beta = (beta + max_beta) / 2.0;
-				}
-				else {
-					max_beta = beta;
-					if(min_beta == -DBL_MAX || min_beta == DBL_MAX)
-						beta /= 2.0;
-					else
-						beta = (beta + min_beta) / 2.0;
-				}
-			}
-			
-			// Update iteration counter
-			iter++;
-		}
-		
-		// Row-normalize current row of P and store in matrix
+        bool found = false;
+        double beta = 1.0;
+        double min_beta = -DBL_MAX;
+        double max_beta =  DBL_MAX;
+        double tol = 1e-5;
+        
+        // Iterate until we found a good perplexity
+        int iter = 0; double sum_P;
+        while(!found && iter < 200) {
+          
+          // Compute Gaussian kernel row
+          for(int m = 0; m < K; m++) cur_P[m] = exp(-beta * distances[m + 1]);
+          
+          // Compute entropy of current row
+          sum_P = DBL_MIN;
+          for(int m = 0; m < K; m++) sum_P += cur_P[m];
+          double H = .0;
+          for(int m = 0; m < K; m++) H += beta * (distances[m + 1] * cur_P[m]);
+          H = (H / sum_P) + log(sum_P);
+          
+          // Evaluate whether the entropy is within the tolerance level
+          double Hdiff = H - log(perplexity);
+          if(Hdiff < tol && -Hdiff < tol) {
+            found = true;
+          }
+          else {
+            if(Hdiff > 0) {
+              min_beta = beta;
+              if(max_beta == DBL_MAX || max_beta == -DBL_MAX)
+                beta *= 2.0;
+              else
+                beta = (beta + max_beta) / 2.0;
+            }
+            else {
+              max_beta = beta;
+              if(min_beta == -DBL_MAX || min_beta == DBL_MAX)
+                beta /= 2.0;
+              else
+                beta = (beta + min_beta) / 2.0;
+            }
+          }
+          
+          // Update iteration counter
+          iter++;
+        }
+        
+        // Row-normalize current row of P and store in matrix
         for(int m = 0; m < K; m++) cur_P[m] /= sum_P;
         for(int m = 0; m < K; m++) {
-            col_P[row_P[n] + m] = indices[m + 1].index();
-            val_P[row_P[n] + m] = cur_P[m];
+          col_P[row_P[n] + m] = indices[m + 1].index();
+          val_P[row_P[n] + m] = cur_P[m];
         }
+      }
+      
+      // Clean up memory
+      obj_X.clear();
+      free(cur_P);
+      delete tree;
+    } else {
+      VpTree<DataPoint, euclidean_distance>* tree =  new VpTree<DataPoint, euclidean_distance>();
+      vector<DataPoint> obj_X(N, DataPoint(D, -1, X));
+      for(int n = 0; n < N; n++) obj_X[n] = DataPoint(D, n, X + n * D);
+      tree->create(obj_X);
+      
+      // Loop over all points to find nearest neighbors
+      if (verbose) Rprintf("Building tree...\n");
+      vector<DataPoint> indices;
+      vector<double> distances;
+      for(int n = 0; n < N; n++) {
+        
+        if(n % 10000 == 0 && verbose) Rprintf(" - point %d of %d\n", n, N);
+        
+        // Find nearest neighbors
+        indices.clear();
+        distances.clear();
+        tree->search(obj_X[n], K + 1, &indices, &distances);
+        
+        // Initialize some variables for binary search
+        bool found = false;
+        double beta = 1.0;
+        double min_beta = -DBL_MAX;
+        double max_beta =  DBL_MAX;
+        double tol = 1e-5;
+        
+        // Iterate until we found a good perplexity
+        int iter = 0; double sum_P;
+        while(!found && iter < 200) {
+          
+          // Compute Gaussian kernel row
+          for(int m = 0; m < K; m++) cur_P[m] = exp(-beta * distances[m + 1]);
+          
+          // Compute entropy of current row
+          sum_P = DBL_MIN;
+          for(int m = 0; m < K; m++) sum_P += cur_P[m];
+          double H = .0;
+          for(int m = 0; m < K; m++) H += beta * (distances[m + 1] * cur_P[m]);
+          H = (H / sum_P) + log(sum_P);
+          
+          // Evaluate whether the entropy is within the tolerance level
+          double Hdiff = H - log(perplexity);
+          if(Hdiff < tol && -Hdiff < tol) {
+            found = true;
+          }
+          else {
+            if(Hdiff > 0) {
+              min_beta = beta;
+              if(max_beta == DBL_MAX || max_beta == -DBL_MAX)
+                beta *= 2.0;
+              else
+                beta = (beta + max_beta) / 2.0;
+            }
+            else {
+              max_beta = beta;
+              if(min_beta == -DBL_MAX || min_beta == DBL_MAX)
+                beta /= 2.0;
+              else
+                beta = (beta + min_beta) / 2.0;
+            }
+          }
+          
+          // Update iteration counter
+          iter++;
+        }
+        
+        // Row-normalize current row of P and store in matrix
+        for(int m = 0; m < K; m++) cur_P[m] /= sum_P;
+        for(int m = 0; m < K; m++) {
+          col_P[row_P[n] + m] = indices[m + 1].index();
+          val_P[row_P[n] + m] = cur_P[m];
+        }
+      }
+      
+      // Clean up memory
+      obj_X.clear();
+      free(cur_P);
+      delete tree;
     }
-    
-    // Clean up memory
-    obj_X.clear();
-    free(cur_P);
-    delete tree;
 }
 
 

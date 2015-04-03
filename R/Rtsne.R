@@ -13,6 +13,7 @@
 #' @param pca logical; Whether an initial PCA step should be performed (default: TRUE)
 #' @param max_iter; Maximum number of iterations (default: 1000)
 #' @param verbose logical; Whether progress updates should be printed (default: FALSE)
+#' @param is_distance logical; Indicate whether X is a distance matrix (experimental, default: FALSE)
 #' 
 #' @return List with the following elements:
 #' \item{Y}{Matrix containing the new representations for the objects}
@@ -34,22 +35,29 @@
 #' @import Rcpp
 #' 
 #' @export
-Rtsne <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,max_iter=1000,verbose=FALSE) {
+Rtsne <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,max_iter=1000,verbose=FALSE, is_distance=FALSE) {
+  
+  if (!is.logical(is_distance)) { stop("is_distance should be a logical variable")}
   if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("Incorrect theta.")}
   if (nrow(X) - 1 < 3 * perplexity) { stop("Perplexity is too large.")}
   if (!is.matrix(X)) { stop("Input X is not a matrix")}
   if (!(max_iter>0)) { stop("Incorrect number of iterations.")}
+  if (is_distance & !(is.matrix(X) & (nrow(X)==ncol(X)))) { stop("Input is not an accepted distance matrix") }
   
   is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
-  if (check_duplicates){
+  if (check_duplicates & !is_distance){
     if (any(duplicated(X))) { stop("Remove duplicates before running TSNE.") }
   }
   
   # Apply PCA
-  if (pca) {
+  if (pca & !is_distance) {
     X <- prcomp(X,retx=TRUE)$x[,1:min(initial_dims,ncol(X))]
   }
+  # Compute Squared distance if we are using exact TSNE
+  if (is_distance & theta==0.0) {
+    X <- X^2
+  }
   
-  Rtsne_cpp(X,dims,perplexity,theta,verbose, max_iter)
+  Rtsne_cpp(X,dims,perplexity,theta,verbose, max_iter, is_distance)
 }
