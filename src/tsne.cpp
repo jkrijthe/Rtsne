@@ -52,7 +52,7 @@ extern "C" {
 using namespace std;
 
 // Perform t-SNE
-void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* cost, bool distance_precomputed) {
+void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* cost, bool distance_precomputed, double* itercost) {
     
     // Determine whether we are using an exact algorithm
     if(N - 1 < 3 * perplexity) { Rcpp::stop("Perplexity too large for the number of data points!\n"); }
@@ -136,6 +136,7 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     else Rprintf("Done in %4.2f seconds (sparsity = %f)!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC, (double) row_P[N] / ((double) N * (double) N));
   }
   start = clock();
+  int costi = 0; //iterator for saving the total costs for the iterations
 	for(int iter = 0; iter < max_iter; iter++) {
         
         // Compute (approximate) gradient
@@ -173,6 +174,8 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
                 total_time += (float) (end - start) / CLOCKS_PER_SEC;
                 if (verbose) Rprintf("Iteration %d: error is %f (50 iterations in %4.2f seconds)\n", iter, C, (float) (end - start) / CLOCKS_PER_SEC);
             }
+            itercost[costi] = C;
+            itercost++;
 			  start = clock();
         }
     }
@@ -411,13 +414,13 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double 
 	  computeSquaredEuclideanDistance(X, N, D, DD);
 	}
 	
-	Rprintf(" %4.4f \n", DD[0]);
-	Rprintf(" %4.4f \n", DD[1]);
-	Rprintf(" %4.4f \n", DD[2]);
-	
-	Rprintf(" %4.4f \n", X[0]);
-	Rprintf(" %4.4f \n", X[1]);
-	Rprintf(" %4.4f \n", X[2]);
+  //Rprintf(" %4.4f \n", DD[0]);
+  //Rprintf(" %4.4f \n", DD[1]);
+  //Rprintf(" %4.4f \n", DD[2]);
+  // 	
+  //Rprintf(" %4.4f \n", X[0]);
+  //Rprintf(" %4.4f \n", X[1]);
+  //Rprintf(" %4.4f \n", X[2]);
 	
 	// Compute the Gaussian kernel row by row
 	for(int n = 0; n < N; n++) {
