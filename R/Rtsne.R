@@ -15,6 +15,7 @@
 #' @param pca logical; Whether an initial PCA step should be performed (default: TRUE)
 #' @param max_iter integer; Maximum number of iterations (default: 1000)
 #' @param verbose logical; Whether progress updates should be printed (default: FALSE)
+#' @param ... Other arguments that can be passed to Rtsne
 #' @param is_distance logical; Indicate whether X is a distance matrix (experimental, default: FALSE)
 #' 
 #' @return List with the following elements:
