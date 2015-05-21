@@ -36,6 +36,8 @@ Rtsne(X, ...)
 
 \item{verbose}{logical; Whether progress updates should be printed (default: FALSE)}
 
+\item{...}{Other arguments that can be passed to Rtsne}
+
 \item{is_distance}{logical; Indicate whether X is a distance matrix (experimental, default: FALSE)}
 }
 \value{

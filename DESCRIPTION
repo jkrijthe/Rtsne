@@ -7,7 +7,7 @@ Date: 2015-01-20
 Author: Jesse Krijthe <jkrijthe@gmail.com>
 Maintainer: Jesse Krijthe <jkrijthe@gmail.com>
 Description: An R wrapper around the fast T-distributed Stochastic
-    Neighbor Embedding implementation by Van der Maaten
+    Neighbor Embedding implementation by Van der Maaten.
 License: BSD_3_clause + file LICENSE
 URL: https://github.com/jkrijthe/Rtsne
 Imports:
