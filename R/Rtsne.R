@@ -69,7 +69,8 @@ Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, 
   
   # Apply PCA
   if (pca & !is_distance) {
-    X <- prcomp(X,retx=TRUE)$x[,1:min(initial_dims,ncol(X))]
+    pca_result <- prcomp(X,retx=TRUE)
+    X <- pca_result$x[,1:min(initial_dims,ncol(pca_result$x))]
   }
   # Compute Squared distance if we are using exact TSNE
   if (is_distance & theta==0.0) {
