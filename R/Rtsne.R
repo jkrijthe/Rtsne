@@ -52,7 +52,7 @@ Rtsne <- function (X, ...) {
 
 #' @describeIn Rtsne
 #' @export
-Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,max_iter=1000,verbose=FALSE, is_distance=FALSE) {
+Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,max_iter=1000,verbose=FALSE, is_distance=FALSE, ...) {
   
   if (!is.logical(is_distance)) { stop("is_distance should be a logical variable")}
   if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("Incorrect theta.")}
