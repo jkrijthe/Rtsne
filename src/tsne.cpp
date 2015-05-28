@@ -52,7 +52,7 @@ extern "C" {
 using namespace std;
 
 // Perform t-SNE
-void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* cost, bool distance_precomputed, double* itercost) {
+void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* cost, bool distance_precomputed, double* itercost, bool init) {
     
     // Determine whether we are using an exact algorithm
     if(N - 1 < 3 * perplexity) { Rcpp::stop("Perplexity too large for the number of data points!\n"); }
@@ -65,6 +65,11 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
 	  int stop_lying_iter = 250, mom_switch_iter = 250;
 	  double momentum = .5, final_momentum = .8;
 	  double eta = 200.0;
+    
+    if (init) {
+      stop_lying_iter = 0; 
+      mom_switch_iter  = 0;
+    }
     
     // Allocate some memory
     double* dY    = (double*) malloc(N * no_dims * sizeof(double));
@@ -127,8 +132,9 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     if(exact) { for(int i = 0; i < N * N; i++)        P[i] *= 12.0; }
     else {      for(int i = 0; i < row_P[N]; i++) val_P[i] *= 12.0; }
 
-	// Initialize solution (randomly)
-	for(int i = 0; i < N * no_dims; i++) Y[i] = randn() * .0001;
+	// Initialize solution (randomly), if not already done
+	if (!init) { for(int i = 0; i < N * no_dims; i++) Y[i] = randn() * .0001; }
+
 	
 	// Perform main training loop
   if (verbose) {
@@ -137,7 +143,15 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
   }
   start = clock();
   int costi = 0; //iterator for saving the total costs for the iterations
+  
 	for(int iter = 0; iter < max_iter; iter++) {
+        
+        // Stop lying about the P-values after a while, and switch momentum
+        if(iter == stop_lying_iter) {
+          if(exact) { for(int i = 0; i < N * N; i++)        P[i] /= 12.0; }
+          else      { for(int i = 0; i < row_P[N]; i++) val_P[i] /= 12.0; }
+        }
+        if(iter == mom_switch_iter) momentum = final_momentum;
         
         // Compute (approximate) gradient
         if(exact) computeExactGradient(P, Y, N, no_dims, dY);
@@ -149,17 +163,10 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
             
         // Perform gradient update (with momentum and gains)
         for(int i = 0; i < N * no_dims; i++) uY[i] = momentum * uY[i] - eta * gains[i] * dY[i];
-		for(int i = 0; i < N * no_dims; i++)  Y[i] = Y[i] + uY[i];
+		    for(int i = 0; i < N * no_dims; i++)  Y[i] = Y[i] + uY[i];
         
         // Make solution zero-mean
-		zeroMean(Y, N, no_dims);
-        
-        // Stop lying about the P-values after a while, and switch momentum
-        if(iter == stop_lying_iter) {
-            if(exact) { for(int i = 0; i < N * N; i++)        P[i] /= 12.0; }
-            else      { for(int i = 0; i < row_P[N]; i++) val_P[i] /= 12.0; }
-        }
-        if(iter == mom_switch_iter) momentum = final_momentum;
+		    zeroMean(Y, N, no_dims);
         
         // Print out progress
         if((iter > 0 && iter % 50 == 0) || iter == max_iter - 1) {

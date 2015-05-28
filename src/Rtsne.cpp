@@ -4,9 +4,7 @@ using namespace Rcpp;
 
 // Function that runs the Barnes-Hut implementation of t-SNE
 // [[Rcpp::export]]
-Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in, bool verbose, int max_iter, bool distance_precomputed) {
-
-  Rcpp::NumericMatrix X(X_in); 
+Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in, double theta_in, bool verbose, int max_iter, bool distance_precomputed, NumericMatrix Y_in, bool init) {
 
   int origN, N, D, no_dims = no_dims_in;
 
@@ -25,16 +23,6 @@ Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double the
             data[i*D+j] = X(i,j);
         }
     }
-  
-    // Set random seed (now done using R's RNG)
-//        if(rand_seed >= 0) {
-//            Rprintf("Using random seed: %d\n", rand_seed);
-//            srand((unsigned int) rand_seed);
-//        }
-//        else {
-//            Rprintf("Using current time as random seed...\n");
-//            srand(time(NULL));
-//        } 
     
     // Make dummy landmarks
     N = origN;
@@ -48,11 +36,21 @@ Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double the
 		double* itercosts = (double*) calloc((int)(ceil(max_iter/50.0)), sizeof(double));
     if(Y == NULL || costs == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     
+    // Initialize solution (randomly)
+    if (init) {
+      for (int i = 0; i < N; i++){
+        for (int j = 0; j < no_dims; j++){
+          Y[i*no_dims+j] = Y_in(i,j);
+        }
+      }
+      if (verbose) Rprintf("Using user supplied starting positions\n");
+    }
+    
     // Run tsne
-		tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs, distance_precomputed, itercosts);
+		tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs, distance_precomputed, itercosts, init);
 
   	// Save the results
-    Rcpp::NumericMatrix Yr(N,no_dims);
+    Rcpp::NumericMatrix Yr(N, no_dims);
     for (int i = 0; i < N; i++){
         for (int j = 0; j < no_dims; j++){
             Yr(i,j) = Y[i*no_dims+j];
@@ -64,10 +62,9 @@ Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double the
       costsr(i) = costs[i];
     }
     Rcpp::NumericVector itercostsr((int)(ceil(max_iter/50.0)));
-    for (int i = 0; i < (int)(ceil(max_iter/50.0)); i++){
+    for (int i = 0; i < (int)(ceil(max_iter/50.0)); i++) {
       itercostsr(i) = itercosts[i];
     }
-    
     
     free(data); data = NULL;
   	free(Y); Y = NULL;

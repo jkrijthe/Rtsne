@@ -17,6 +17,7 @@
 #' @param verbose logical; Whether progress updates should be printed (default: FALSE)
 #' @param ... Other arguments that can be passed to Rtsne
 #' @param is_distance logical; Indicate whether X is a distance matrix (experimental, default: FALSE)
+#' @param Y_init matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with false perplexity values and a larger momentum term will be skipped.
 #' 
 #' @return List with the following elements:
 #' \item{Y}{Matrix containing the new representations for the objects}
@@ -42,6 +43,9 @@
 #' tsne_out <- Rtsne(dist(iris_matrix))
 #' plot(tsne_out$Y,col=iris_unique$Species)
 #' 
+#' # Use a given initialization of the locations of the points
+#' tsne_part1 <- Rtsne(iris_unique[,1:4], theta=0.0, pca=FALSE,max_iter=350)
+#' tsne_part2 <- Rtsne(iris_unique[,1:4], theta=0.0, pca=FALSE, max_iter=150,Y_init=tsne_part1$Y)
 #' @useDynLib Rtsne
 #' @import Rcpp
 #' 
@@ -52,7 +56,7 @@ Rtsne <- function (X, ...) {
 
 #' @describeIn Rtsne
 #' @export
-Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,max_iter=1000,verbose=FALSE, is_distance=FALSE, ...) {
+Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,max_iter=1000,verbose=FALSE, is_distance=FALSE, Y_init=NULL, ...) {
   
   if (!is.logical(is_distance)) { stop("is_distance should be a logical variable")}
   if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("Incorrect theta.")}
@@ -60,6 +64,7 @@ Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, 
   if (!is.matrix(X)) { stop("Input X is not a matrix")}
   if (!(max_iter>0)) { stop("Incorrect number of iterations.")}
   if (is_distance & !(is.matrix(X) & (nrow(X)==ncol(X)))) { stop("Input is not an accepted distance matrix") }
+  if (!is.null(Y_init) & (nrow(X)!=nrow(Y_init) || ncol(Y_init)!=dims)) { stop("Incorrect format for Y_init.") }
   
   is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
@@ -77,7 +82,14 @@ Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, 
     X <- X^2
   }
   
-  Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance)
+  if (is.null(Y_init)) {
+    init <- FALSE
+    Y_init <- matrix()
+  } else {
+    init <- TRUE
+  }
+  
+  Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance, Y_init, init)
 }
 
 #' @describeIn Rtsne

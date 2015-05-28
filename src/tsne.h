@@ -41,7 +41,7 @@ static inline double sign_tsne(double x) { return (x == .0 ? .0 : (x < .0 ? -1.0
 class TSNE
 {    
 public:
-    void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* costs, bool distance_precomputed, double* itercost);
+    void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* costs, bool distance_precomputed, double* itercost, bool init);
     bool load_data(double** data, int* n, int* d, int* no_dims, double* theta, double* perplexity, int* rand_seed);
     void save_data(double* data, int* landmarks, double* costs, int n, int d);
 

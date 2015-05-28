@@ -11,7 +11,7 @@ Rtsne(X, ...)
 
 \method{Rtsne}{default}(X, dims = 2, initial_dims = 50, perplexity = 30,
   theta = 0.5, check_duplicates = TRUE, pca = TRUE, max_iter = 1000,
-  verbose = FALSE, is_distance = FALSE, ...)
+  verbose = FALSE, is_distance = FALSE, Y_init = NULL, ...)
 
 \method{Rtsne}{dist}(X, ..., is_distance = TRUE)
 
@@ -39,6 +39,8 @@ Rtsne(X, ...)
 \item{verbose}{logical; Whether progress updates should be printed (default: FALSE)}
 
 \item{is_distance}{logical; Indicate whether X is a distance matrix (experimental, default: FALSE)}
+
+\item{Y_init}{matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with false perplexity values and a larger momentum term will be skipped.}
 }
 \value{
 List with the following elements:
@@ -78,6 +80,10 @@ plot(tsne_out$Y,col=iris_unique$Species)
 # Using a dist object
 tsne_out <- Rtsne(dist(iris_matrix))
 plot(tsne_out$Y,col=iris_unique$Species)
+
+# Use a given initialization of the locations of the points
+tsne_part1 <- Rtsne(iris_unique[,1:4], theta=0.0, pca=FALSE,max_iter=350)
+tsne_part2 <- Rtsne(iris_unique[,1:4], theta=0.0, pca=FALSE, max_iter=150,Y_init=tsne_part1$Y)
 }
 \references{
 L.J.P. van der Maaten. Barnes-Hut-SNE. In Proceedings of the International Conference on Learning Representations, 2013.

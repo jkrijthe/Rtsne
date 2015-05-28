@@ -6,19 +6,21 @@
 using namespace Rcpp;
 
 // Rtsne_cpp
-Rcpp::List Rtsne_cpp(SEXP X_in, int no_dims_in, double perplexity_in, double theta_in, bool verbose, int max_iter, bool distance_precomputed);
-RcppExport SEXP Rtsne_Rtsne_cpp(SEXP X_inSEXP, SEXP no_dims_inSEXP, SEXP perplexity_inSEXP, SEXP theta_inSEXP, SEXP verboseSEXP, SEXP max_iterSEXP, SEXP distance_precomputedSEXP) {
+Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in, double theta_in, bool verbose, int max_iter, bool distance_precomputed, NumericMatrix Y_in, bool init);
+RcppExport SEXP Rtsne_Rtsne_cpp(SEXP XSEXP, SEXP no_dims_inSEXP, SEXP perplexity_inSEXP, SEXP theta_inSEXP, SEXP verboseSEXP, SEXP max_iterSEXP, SEXP distance_precomputedSEXP, SEXP Y_inSEXP, SEXP initSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< SEXP >::type X_in(X_inSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type X(XSEXP);
     Rcpp::traits::input_parameter< int >::type no_dims_in(no_dims_inSEXP);
     Rcpp::traits::input_parameter< double >::type perplexity_in(perplexity_inSEXP);
     Rcpp::traits::input_parameter< double >::type theta_in(theta_inSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
     Rcpp::traits::input_parameter< bool >::type distance_precomputed(distance_precomputedSEXP);
-    __result = Rcpp::wrap(Rtsne_cpp(X_in, no_dims_in, perplexity_in, theta_in, verbose, max_iter, distance_precomputed));
+    Rcpp::traits::input_parameter< NumericMatrix >::type Y_in(Y_inSEXP);
+    Rcpp::traits::input_parameter< bool >::type init(initSEXP);
+    __result = Rcpp::wrap(Rtsne_cpp(X, no_dims_in, perplexity_in, theta_in, verbose, max_iter, distance_precomputed, Y_in, init));
     return __result;
 END_RCPP
 }
