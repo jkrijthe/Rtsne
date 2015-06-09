@@ -169,7 +169,7 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
 		    zeroMean(Y, N, no_dims);
         
         // Print out progress
-        if((iter > 0 && iter % 50 == 0) || iter == max_iter - 1) {
+        if((iter > 0 && (iter+1) % 50 == 0) || iter == max_iter - 1) {
             end = clock();
             double C = .0;
             if(exact) C = evaluateError(P, Y, N, no_dims);
