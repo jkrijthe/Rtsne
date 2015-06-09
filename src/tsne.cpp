@@ -179,7 +179,7 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
             } 
             else {
                 total_time += (float) (end - start) / CLOCKS_PER_SEC;
-                if (verbose) Rprintf("Iteration %d: error is %f (50 iterations in %4.2f seconds)\n", iter, C, (float) (end - start) / CLOCKS_PER_SEC);
+                if (verbose) Rprintf("Iteration %d: error is %f (50 iterations in %4.2f seconds)\n", iter+1, C, (float) (end - start) / CLOCKS_PER_SEC);
             }
             itercost[costi] = C;
             itercost++;
