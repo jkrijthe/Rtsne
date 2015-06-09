@@ -7,7 +7,7 @@ R wrapper for Van der Maaten's Barnes-Hut implementation of t-Distributed Stocha
 Usage
 -----
 
-To use this package use the following code in R to run a simple example (to install, see below).
+After installing the package, use the following code to run a simple example (to install, see below).
 
 ``` r
 library(Rtsne) # Load package
