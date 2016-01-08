@@ -55,7 +55,7 @@ Rtsne <- function (X, ...) {
   UseMethod("Rtsne", X)
 }
 
-#' @describeIn Rtsne
+#' @describeIn Rtsne Default Interface
 #' @export
 Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,max_iter=1000,verbose=FALSE, is_distance=FALSE, Y_init=NULL, ...) {
   
@@ -93,14 +93,14 @@ Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, 
   Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance, Y_init, init)
 }
 
-#' @describeIn Rtsne
+#' @describeIn Rtsne tsne on given dist object
 #' @export
 Rtsne.dist <- function(X,...,is_distance=TRUE) {
   X <- as.matrix(X)
   Rtsne(X, ..., is_distance=is_distance)
 }
 
-#' @describeIn Rtsne
+#' @describeIn Rtsne tsne on data.frame
 #' @export
 Rtsne.data.frame <- function(X,...) {
   X <- model.matrix(~.-1,X)
