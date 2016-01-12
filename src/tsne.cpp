@@ -421,14 +421,11 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double 
 	  computeSquaredEuclideanDistance(X, N, D, DD);
 	}
 	
-  //Rprintf(" %4.4f \n", DD[0]);
-  //Rprintf(" %4.4f \n", DD[1]);
-  //Rprintf(" %4.4f \n", DD[2]);
-  // 	
-  //Rprintf(" %4.4f \n", X[0]);
-  //Rprintf(" %4.4f \n", X[1]);
-  //Rprintf(" %4.4f \n", X[2]);
-	
+	// For debugging purposes:
+// 	for (int n=0; n<N*N; n++) {
+//     Rprintf(" %4.4f \n", DD[n]);
+// 	}
+
 	// Compute the Gaussian kernel row by row
 	for(int n = 0; n < N; n++) {
         
@@ -542,13 +539,13 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int*
         while(!found && iter < 200) {
           
           // Compute Gaussian kernel row
-          for(int m = 0; m < K; m++) cur_P[m] = exp(-beta * distances[m + 1]);
+          for(int m = 0; m < K; m++) cur_P[m] = exp(-beta * distances[m + 1] * distances[m + 1]);
           
           // Compute entropy of current row
           sum_P = DBL_MIN;
           for(int m = 0; m < K; m++) sum_P += cur_P[m];
           double H = .0;
-          for(int m = 0; m < K; m++) H += beta * (distances[m + 1] * cur_P[m]);
+          for(int m = 0; m < K; m++) H += beta * (distances[m + 1] * distances[m + 1] * cur_P[m]);
           H = (H / sum_P) + log(sum_P);
           
           // Evaluate whether the entropy is within the tolerance level
@@ -620,13 +617,13 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int*
         while(!found && iter < 200) {
           
           // Compute Gaussian kernel row
-          for(int m = 0; m < K; m++) cur_P[m] = exp(-beta * distances[m + 1]);
+          for(int m = 0; m < K; m++) cur_P[m] = exp(-beta * distances[m + 1] *distances[m + 1]);
           
           // Compute entropy of current row
           sum_P = DBL_MIN;
           for(int m = 0; m < K; m++) sum_P += cur_P[m];
           double H = .0;
-          for(int m = 0; m < K; m++) H += beta * (distances[m + 1] * cur_P[m]);
+          for(int m = 0; m < K; m++) H += beta * (distances[m + 1] * distances[m + 1] * cur_P[m]);
           H = (H / sum_P) + log(sum_P);
           
           // Evaluate whether the entropy is within the tolerance level
