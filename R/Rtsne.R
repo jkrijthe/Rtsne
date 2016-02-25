@@ -1,10 +1,19 @@
 #' Barnes-Hut implementation of t-Distributed Stochastic Neighbor Embedding 
 #' 
-#' Wrapper for the C++ implementation of Barnes-Hut t-Distributed Stochastic Neighbor Embedding
+#' Wrapper for the C++ implementation of Barnes-Hut t-Distributed Stochastic Neighbor Embedding. t-SNE is a method for constructing a low dimensional map from high-dimensional data, distances or similarities. Exact t-SNE can be computed by setting theta=0.0. 
 #' 
-#' After checking the correctness of the input, this function (optionally) does an initial reduction of the feature space using \code{\link{prcomp}}, before calling the C++ TSNE implementation. Since R's random number generator is used, use \code{\link{set.seed}} before the function call to get reproducible results.
+#' Given a distance matrix \eqn{D} between input objects (which by default, is the euclidean distances between two objects), we calculate a similarity score in the original space p_ij. \deqn{ p_{j | i} = \frac{\exp(-\|D_{ij}\|^2 / 2 \sigma_i^2)}{\sum_{k \neq i} \exp(-\|D_{ij}\|^2 / 2 \sigma_i^2)} } which is then symmetrized using: \deqn{ p_{i j}=\frac{p_{j|i} + p_{i|j}}{2n}}. The \eqn{\sigma} for each object is chosen in such a way that the perplexity of p_{j|i} has a value that is close to the user defined perplexity. This value acts effectively controls how many nearest neighbours are taken into account when constructing the new map.
+#' For the low-dimensional space we use similarity metric:
+#' \deqn{ q_{i j} = \frac{(1+ \| y_i-y_j\|^2)^{-1}}{\sum_{k \neq l} 1+ \| y_k-y_l\|^2)^{-1}}}. 
+#' By changing the location of the objects y in the map to minimize the Kullback-Leibler divergence between these two distributions \eqn{ q_{i j}} and \eqn{ p_{i j}}, we create a map that focusses on small-scale structure, due to the assymetry of the KL-divergence. The t-distribution is chosen to avoid the crowding problem: in the original high dimensional space, there are potentially many equidistant objects with moderate distance from a particular object, more than can be accounted for in the low dimensional representation. The t-distribution makes sure that these objects are more spread out.
 #' 
-#' Is \code{X} is a data.frame, it is transformed into a matrix using \code{\link{model.matrix}}. If \code{X} is a \code{\link{dist}} object, it is currently first expanded into a full distance matrix.
+#' For larger datasets, a problem with the a simple gradient descent to minimize the Kullback-Leibler divergence is the computational complexity of each gradient step (which is \eqn{O(n^2)}). The Barnes-Hut implementation of the algorithm attempts to mitigate this problem using two tricks: (1) approximating small similarities by 0 in the \eqn{p_{ij}} distribution, where the non-zero entries are computed by finding 3*perplexity nearest neighbours using an efficient tree search. (2) Using the Barnes-Hut algorithm in the computation of the gradient which approximates large distance similarities using a quadtree. This approximation is controlled by the theta parameter, with smaller values leading to more exact approximations. When theta=0.0, the implementation uses a standard t-SNE implementation. The Barnes-Hut approximation leads to a \eqn{O(n log(n))} computational complexity for each iteration.
+#' 
+#' During the minimization of the KL-divergence, the implementation uses a trick known as early exaggeration, which multiplies the \eqn{p_{ij}}'s by 12 during the first 250 iterations. This leads to tighter clustering and more distance between clusters of objects. This early exaggeration is not used when the user given an initialization through Y_init. During the early exaggeration phase, a momentum term of 0.5 is used while this is changed to 0.8 after the first 250 iterations.
+#' 
+#' After checking the correctness of the input, the Rtsne function (optionally) does an initial reduction of the feature space using \code{\link{prcomp}}, before calling the C++ TSNE implementation. Since R's random number generator is used, use \code{\link{set.seed}} before the function call to get reproducible results.
+#' 
+#' If \code{X} is a data.frame, it is transformed into a matrix using \code{\link{model.matrix}}. If \code{X} is a \code{\link{dist}} object, it is currently first expanded into a full distance matrix.
 #' 
 #' @param X matrix; Data matrix
 #' @param dims integer; Output dimensionality (default: 2)
@@ -28,7 +37,8 @@
 #' \item{costs}{The cost for every object after the final iteration}
 #' \item{itercosts}{The total costs for all objects in every 50th + the last iteration}
 #' 
-#' @references L.J.P. van der Maaten. Barnes-Hut-SNE. In Proceedings of the International Conference on Learning Representations, 2013.
+#' @references Maaten, L. Van Der, 2014. Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research, 15, p.3221-3245.
+#' @references van der Maaten, L.J.P. & Hinton, G.E., 2008. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research, 9, pp.2579-2605.
 #' 
 #' @examples
 #' iris_unique <- unique(iris) # Remove duplicates
