@@ -1,0 +1,33 @@
+citHeader("t-SNE is described in (Van der Maaten & Hinton 2008), while the Barnes-Hut t-SNE implementation is described in (Van der Maaten 2014). To cite the Rtsne package specifically, use (Krijthe 2015).")
+
+citEntry(
+ entry="Article",
+ title="Visualizing High-Dimensional Data Using t-SNE",
+ volume= "9",
+ pages="2579-2605",
+ year="2008",
+ author="L.J.P. van der Maaten and G.E. Hinton",
+ journal="Journal of Machine Learning Research",
+ textVersion="L.J.P. van der Maaten and G.E. Hinton. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605, 2008.")
+
+citEntry(
+  entry="Article",
+ title="Accelerating t-SNE using Tree-Based Algorithms",
+ volume= "15",
+ pages="3221-3245",
+ year="2014",
+ author="L.J.P. van der Maaten",
+ journal="Journal of Machine Learning Research",
+ textVersion="L.J.P. van der Maaten. Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research 15(Oct):3221-3245, 2014."
+)
+
+citEntry(
+      entry="Manual",
+      title = "{Rtsne}: T-Distributed Stochastic Neighbor Embedding using Barnes-Hut
+Implementation",
+    author = "Jesse H. Krijthe",
+    year = "2015",
+    note = sprintf("R package version %s", meta$Version),
+    url = "https://github.com/jkrijthe/Rtsne",
+    textVersion="Jesse H. Krijthe (2015). Rtsne: T-Distributed Stochastic Neighbor Embedding using a Barnes-Hut Implementation, URL: https://github.com/jkrijthe/Rtsne"
+)
