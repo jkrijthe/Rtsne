@@ -79,15 +79,15 @@ Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, 
   
   is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
-  if (check_duplicates & !is_distance){
-    if (any(duplicated(X))) { stop("Remove duplicates before running TSNE.") }
-  }
   
   # Apply PCA
   if (pca & !is_distance) {
     pca_result <- prcomp(X,retx=TRUE)
     X <- pca_result$x[,1:min(initial_dims,ncol(pca_result$x))]
   }
+  if (check_duplicates & !is_distance){
+    if (any(duplicated(X))) { stop("Remove duplicates before running TSNE.") }
+  }  
   # Compute Squared distance if we are using exact TSNE
   if (is_distance & theta==0.0) {
     X <- X^2
