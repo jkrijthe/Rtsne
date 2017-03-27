@@ -33,7 +33,7 @@ tsne_out <- Rtsne(as.matrix(iris_unique[,1:4])) # Run TSNE
 plot(tsne_out$Y,col=iris_unique$Species) # Plot the result
 ```
 
-![](README-example-1.png)
+![](tools/example-1.png)
 
 Details
 =======

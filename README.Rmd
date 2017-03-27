@@ -36,7 +36,7 @@ devtools::install_github("jkrijthe/Rtsne")
 
 ##Usage
 After installing the package, use the following code to run a simple example (to install, see below).
-```{r example}
+```{r example, fig.path="tools/"}
 library(Rtsne) # Load package
 iris_unique <- unique(iris) # Remove duplicates
 set.seed(42) # Sets seed for reproducibility
