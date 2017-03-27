@@ -11,7 +11,11 @@ Rtsne(X, ...)
 
 \method{Rtsne}{default}(X, dims = 2, initial_dims = 50, perplexity = 30,
   theta = 0.5, check_duplicates = TRUE, pca = TRUE, max_iter = 1000,
-  verbose = FALSE, is_distance = FALSE, Y_init = NULL, ...)
+  verbose = FALSE, is_distance = FALSE, Y_init = NULL,
+  pca_center = TRUE, pca_scale = FALSE,
+  stop_lying_iter = ifelse(is.null(Y_init), 250L, 0L),
+  mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L), momentum = 0.5,
+  final_momentum = 0.8, eta = 200, exaggeration_factor = 12, ...)
 
 \method{Rtsne}{dist}(X, ..., is_distance = TRUE)
 
@@ -41,6 +45,22 @@ Rtsne(X, ...)
 \item{is_distance}{logical; Indicate whether X is a distance matrix (experimental, default: FALSE)}
 
 \item{Y_init}{matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with exaggerated perplexity values and a larger momentum term will be skipped.}
+
+\item{pca_center}{logical; Should data be centered before pca is applied? (default: TRUE)}
+
+\item{pca_scale}{logical; Should data be scaled before pca is applied? (default: FALSE)}
+
+\item{stop_lying_iter}{integer; Iteration after which the perplexities are no longer exaggerated (default: 250, except when Y_init is used, then 0)}
+
+\item{mom_switch_iter}{integer; Iteration after which the final momentum is used (default: 250, except when Y_init is used, then 0)}
+
+\item{momentum}{numeric; Momentum used in the first part of the optimization (default: 0.5)}
+
+\item{final_momentum}{numeric; Momentum used in the final part of the optimization (default: 0.8)}
+
+\item{eta}{numeric; Learning rate (default: 200.0)}
+
+\item{exaggeration_factor}{numeric; Exaggeration factor used to multiply the P matrix in the first part of the optimization (default: 12.0)}
 }
 \value{
 List with the following elements:
@@ -51,6 +71,12 @@ List with the following elements:
 \item{theta}{See above}
 \item{costs}{The cost for every object after the final iteration}
 \item{itercosts}{The total costs (KL-divergence) for all objects in every 50th + the last iteration}
+\item{stop_lying_iter}{Iteration after which the perplexities are no longer exaggerated}
+\item{mom_switch_iter}{Iteration after which the final momentum is used}
+\item{momentum}{Momentum used in the first part of the optimization}
+\item{final_momentum}{Momentum used in the final part of the optimization}
+\item{eta}{Learning rate}
+\item{exaggeration_factor}{Exaggeration factor used to multiply the P matrix in the first part of the optimization}
 }
 \description{
 Wrapper for the C++ implementation of Barnes-Hut t-Distributed Stochastic Neighbor Embedding. t-SNE is a method for constructing a low dimensional embedding of high-dimensional data, distances or similarities. Exact t-SNE can be computed by setting theta=0.0.
@@ -63,7 +89,7 @@ By changing the location of the objects y in the embedding to minimize the Kullb
 
 For larger datasets, a problem with the a simple gradient descent to minimize the Kullback-Leibler divergence is the computational complexity of each gradient step (which is \eqn{O(n^2)}). The Barnes-Hut implementation of the algorithm attempts to mitigate this problem using two tricks: (1) approximating small similarities by 0 in the \eqn{p_{ij}} distribution, where the non-zero entries are computed by finding 3*perplexity nearest neighbours using an efficient tree search. (2) Using the Barnes-Hut algorithm in the computation of the gradient which approximates large distance similarities using a quadtree. This approximation is controlled by the \code{theta} parameter, with smaller values leading to more exact approximations. When \code{theta=0.0}, the implementation uses a standard t-SNE implementation. The Barnes-Hut approximation leads to a \eqn{O(n log(n))} computational complexity for each iteration.
 
-During the minimization of the KL-divergence, the implementation uses a trick known as early exaggeration, which multiplies the \eqn{p_{ij}}'s by 12 during the first 250 iterations. This leads to tighter clustering and more distance between clusters of objects. This early exaggeration is not used when the user gives an initialization of the objects in the embedding by setting \code{Y_init}. During the early exaggeration phase, a momentum term of 0.5 is used while this is changed to 0.8 after the first 250 iterations.
+During the minimization of the KL-divergence, the implementation uses a trick known as early exaggeration, which multiplies the \eqn{p_{ij}}'s by 12 during the first 250 iterations. This leads to tighter clustering and more distance between clusters of objects. This early exaggeration is not used when the user gives an initialization of the objects in the embedding by setting \code{Y_init}. During the early exaggeration phase, a momentum term of 0.5 is used while this is changed to 0.8 after the first 250 iterations. All these default parameters can be changed by the user.
 
 After checking the correctness of the input, the \code{Rtsne} function (optionally) does an initial reduction of the feature space using \code{\link{prcomp}}, before calling the C++ TSNE implementation. Since R's random number generator is used, use \code{\link{set.seed}} before the function call to get reproducible results.
 

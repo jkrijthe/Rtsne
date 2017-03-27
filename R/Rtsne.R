@@ -9,7 +9,7 @@
 #' 
 #' For larger datasets, a problem with the a simple gradient descent to minimize the Kullback-Leibler divergence is the computational complexity of each gradient step (which is \eqn{O(n^2)}). The Barnes-Hut implementation of the algorithm attempts to mitigate this problem using two tricks: (1) approximating small similarities by 0 in the \eqn{p_{ij}} distribution, where the non-zero entries are computed by finding 3*perplexity nearest neighbours using an efficient tree search. (2) Using the Barnes-Hut algorithm in the computation of the gradient which approximates large distance similarities using a quadtree. This approximation is controlled by the \code{theta} parameter, with smaller values leading to more exact approximations. When \code{theta=0.0}, the implementation uses a standard t-SNE implementation. The Barnes-Hut approximation leads to a \eqn{O(n log(n))} computational complexity for each iteration.
 #' 
-#' During the minimization of the KL-divergence, the implementation uses a trick known as early exaggeration, which multiplies the \eqn{p_{ij}}'s by 12 during the first 250 iterations. This leads to tighter clustering and more distance between clusters of objects. This early exaggeration is not used when the user gives an initialization of the objects in the embedding by setting \code{Y_init}. During the early exaggeration phase, a momentum term of 0.5 is used while this is changed to 0.8 after the first 250 iterations.
+#' During the minimization of the KL-divergence, the implementation uses a trick known as early exaggeration, which multiplies the \eqn{p_{ij}}'s by 12 during the first 250 iterations. This leads to tighter clustering and more distance between clusters of objects. This early exaggeration is not used when the user gives an initialization of the objects in the embedding by setting \code{Y_init}. During the early exaggeration phase, a momentum term of 0.5 is used while this is changed to 0.8 after the first 250 iterations. All these default parameters can be changed by the user.
 #' 
 #' After checking the correctness of the input, the \code{Rtsne} function (optionally) does an initial reduction of the feature space using \code{\link{prcomp}}, before calling the C++ TSNE implementation. Since R's random number generator is used, use \code{\link{set.seed}} before the function call to get reproducible results.
 #' 
@@ -27,6 +27,14 @@
 #' @param ... Other arguments that can be passed to Rtsne
 #' @param is_distance logical; Indicate whether X is a distance matrix (experimental, default: FALSE)
 #' @param Y_init matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with exaggerated perplexity values and a larger momentum term will be skipped.
+#' @param pca_center logical; Should data be centered before pca is applied? (default: TRUE)
+#' @param pca_scale logical; Should data be scaled before pca is applied? (default: FALSE)
+#' @param stop_lying_iter integer; Iteration after which the perplexities are no longer exaggerated (default: 250, except when Y_init is used, then 0)
+#' @param mom_switch_iter integer; Iteration after which the final momentum is used (default: 250, except when Y_init is used, then 0) 
+#' @param momentum numeric; Momentum used in the first part of the optimization (default: 0.5)
+#' @param final_momentum numeric; Momentum used in the final part of the optimization (default: 0.8)
+#' @param eta numeric; Learning rate (default: 200.0)
+#' @param exaggeration_factor numeric; Exaggeration factor used to multiply the P matrix in the first part of the optimization (default: 12.0)
 #' 
 #' @return List with the following elements:
 #' \item{Y}{Matrix containing the new representations for the objects}
@@ -36,6 +44,12 @@
 #' \item{theta}{See above}
 #' \item{costs}{The cost for every object after the final iteration}
 #' \item{itercosts}{The total costs (KL-divergence) for all objects in every 50th + the last iteration}
+#' \item{stop_lying_iter}{Iteration after which the perplexities are no longer exaggerated}
+#' \item{mom_switch_iter}{Iteration after which the final momentum is used}
+#' \item{momentum}{Momentum used in the first part of the optimization}
+#' \item{final_momentum}{Momentum used in the final part of the optimization}
+#' \item{eta}{Learning rate}
+#' \item{exaggeration_factor}{Exaggeration factor used to multiply the P matrix in the first part of the optimization}
 #' 
 #' @references Maaten, L. Van Der, 2014. Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research, 15, p.3221-3245.
 #' @references van der Maaten, L.J.P. & Hinton, G.E., 2008. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research, 9, pp.2579-2605.
@@ -67,7 +81,16 @@ Rtsne <- function (X, ...) {
 
 #' @describeIn Rtsne Default Interface
 #' @export
-Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, check_duplicates=TRUE, pca=TRUE,max_iter=1000,verbose=FALSE, is_distance=FALSE, Y_init=NULL, ...) {
+Rtsne.default <- function(X, dims=2, initial_dims=50, 
+                          perplexity=30, theta=0.5, 
+                          check_duplicates=TRUE, 
+                          pca=TRUE, max_iter=1000,verbose=FALSE, 
+                          is_distance=FALSE, Y_init=NULL, 
+                          pca_center=TRUE, pca_scale=FALSE,
+                          stop_lying_iter=ifelse(is.null(Y_init),250L,0L), 
+                          mom_switch_iter=ifelse(is.null(Y_init),250L,0L), 
+                          momentum=0.5, final_momentum=0.8,
+                          eta=200.0, exaggeration_factor=12.0, ...) {
   
   if (!is.logical(is_distance)) { stop("is_distance should be a logical variable")}
   if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("Incorrect theta.")}
@@ -76,13 +99,17 @@ Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, 
   if (!(max_iter>0)) { stop("Incorrect number of iterations.")}
   if (is_distance & !(is.matrix(X) & (nrow(X)==ncol(X)))) { stop("Input is not an accepted distance matrix") }
   if (!is.null(Y_init) & (nrow(X)!=nrow(Y_init) || ncol(Y_init)!=dims)) { stop("Incorrect format for Y_init.") }
+  if (!(is.logical(pca_center) && is.logical(pca_scale)) ) { stop("pca_center and pca_scale should be TRUE or FALSE")}
+  if (!is.integer(stop_lying_iter) || stop_lying_iter<0) { stop("stop_lying_iter should be a positive integer")}
+  if (!is.integer(mom_switch_iter) || mom_switch_iter<0) { stop("mom_switch_iter should be a positive integer")}
+  if (!is.numeric(exaggeration_factor)) { stop("exaggeration_factor should be numeric")}
   
   is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
   
   # Apply PCA
   if (pca & !is_distance) {
-    pca_result <- prcomp(X,retx=TRUE)
+    pca_result <- prcomp(X,retx=TRUE,center = pca_center, scale. = pca_scale)
     X <- pca_result$x[,1:min(initial_dims,ncol(pca_result$x))]
   }
   if (check_duplicates & !is_distance){
@@ -100,7 +127,8 @@ Rtsne.default <- function(X, dims=2, initial_dims=50, perplexity=30, theta=0.5, 
     init <- TRUE
   }
   
-  Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance, Y_init, init)
+  Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance, Y_init, init,
+            stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor)
 }
 
 #' @describeIn Rtsne tsne on given dist object

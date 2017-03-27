@@ -4,7 +4,12 @@ using namespace Rcpp;
 
 // Function that runs the Barnes-Hut implementation of t-SNE
 // [[Rcpp::export]]
-Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in, double theta_in, bool verbose, int max_iter, bool distance_precomputed, NumericMatrix Y_in, bool init) {
+Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in, 
+                     double theta_in, bool verbose, int max_iter, 
+                     bool distance_precomputed, NumericMatrix Y_in, bool init, 
+                     int stop_lying_iter_in, int mom_switch_iter_in,
+                     double momentum_in, double final_momentum_in, 
+                     double eta_in, double exaggeration_factor_in) {
 
   int origN, N, D, no_dims = no_dims_in;
 
@@ -12,7 +17,13 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in, doub
   TSNE* tsne = new TSNE();
   double perplexity = perplexity_in;
   double theta = theta_in;
-
+  int stop_lying_iter = stop_lying_iter_in;
+  int mom_switch_iter = mom_switch_iter_in;
+  double momentum = momentum_in;
+  double final_momentum = final_momentum_in;
+  double eta = eta_in;
+  double exaggeration_factor = exaggeration_factor_in;
+  
   origN = X.nrow();
   D = X.ncol();
     
@@ -47,7 +58,8 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in, doub
     }
     
     // Run tsne
-		tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs, distance_precomputed, itercosts, init);
+		tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs, distance_precomputed, 
+            itercosts, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor);
 
   	// Save the results
     Rcpp::NumericMatrix Yr(N, no_dims);
@@ -72,6 +84,18 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in, doub
 		free(landmarks); landmarks = NULL;
     delete(tsne);
     
-    Rcpp::List output = Rcpp::List::create(Rcpp::_["theta"]=theta, Rcpp::_["perplexity"]=perplexity, Rcpp::_["N"]=N,Rcpp::_["origD"]=D,Rcpp::_["Y"]=Yr, Rcpp::_["costs"]=costsr, Rcpp::_["itercosts"]=itercostsr);
+    Rcpp::List output = Rcpp::List::create(Rcpp::_["theta"]=theta, 
+                                           Rcpp::_["perplexity"]=perplexity, 
+                                           Rcpp::_["N"]=N,
+                                           Rcpp::_["origD"]=D,
+                                           Rcpp::_["Y"]=Yr, 
+                                           Rcpp::_["costs"]=costsr, 
+                                           Rcpp::_["itercosts"]=itercostsr,
+                                           Rcpp::_["stop_lying_iter"]=stop_lying_iter, 
+                                           Rcpp::_["mom_switch_iter"]=mom_switch_iter, 
+                                           Rcpp::_["momentum"]=momentum, 
+                                           Rcpp::_["final_momentum"]=final_momentum, 
+                                           Rcpp::_["eta"]=eta, 
+                                           Rcpp::_["exaggeration_factor"]=exaggeration_factor);
     return output; 
 }

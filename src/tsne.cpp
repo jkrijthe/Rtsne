@@ -52,7 +52,11 @@ extern "C" {
 using namespace std;
 
 // Perform t-SNE
-void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexity, double theta, bool verbose, int max_iter, double* cost, bool distance_precomputed, double* itercost, bool init) {
+void TSNE::run(double* X, int N, int D, double* Y, int no_dims, 
+               double perplexity, double theta, bool verbose, int max_iter, double* cost, 
+               bool distance_precomputed, double* itercost, bool init, 
+               int stop_lying_iter, int mom_switch_iter, double momentum, double final_momentum, 
+               double eta, double exaggeration_factor) {
     
     // Determine whether we are using an exact algorithm
     if(N - 1 < 3 * perplexity) { Rcpp::stop("Perplexity too large for the number of data points!\n"); }
@@ -62,14 +66,6 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     // Set learning parameters
     float total_time = .0;
     clock_t start, end;
-	  int stop_lying_iter = 250, mom_switch_iter = 250;
-	  double momentum = .5, final_momentum = .8;
-	  double eta = 200.0;
-    
-    if (init) {
-      stop_lying_iter = 0; 
-      mom_switch_iter  = 0;
-    }
     
     // Allocate some memory
     double* dY    = (double*) malloc(N * no_dims * sizeof(double));
@@ -129,8 +125,8 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims, double perplexit
     end = clock();
     
     // Lie about the P-values
-    if(exact) { for(int i = 0; i < N * N; i++)        P[i] *= 12.0; }
-    else {      for(int i = 0; i < row_P[N]; i++) val_P[i] *= 12.0; }
+    if(exact) { for(int i = 0; i < N * N; i++)        P[i] *= exaggeration_factor; }
+    else {      for(int i = 0; i < row_P[N]; i++) val_P[i] *= exaggeration_factor; }
 
 	// Initialize solution (randomly), if not already done
 	if (!init) { for(int i = 0; i < N * no_dims; i++) Y[i] = randn() * .0001; }
