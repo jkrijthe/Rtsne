@@ -46,24 +46,20 @@ public:
              double theta, bool verbose, int max_iter, double* costs, 
              bool distance_precomputed, double* itercost, bool init, int stop_lying_iter, 
              int mom_switch_iter, double momentum, double final_momentum, double eta, double exaggeration_factor);
-    bool load_data(double** data, int* n, int* d, int* no_dims, double* theta, double* perplexity, int* rand_seed);
-    void save_data(double* data, int* landmarks, double* costs, int n, int d);
-
-    void symmetrizeMatrix(int** row_P, int** col_P, double** val_P, int N); // should be static?!
+    void symmetrizeMatrix(unsigned int** row_P, unsigned int** col_P, double** val_P, int N); // should be static?!
 
     
 private:
-    void computeGradient(double* P, int* inp_row_P, int* inp_col_P, double* inp_val_P, double* Y, int N, int D, double* dC, double theta);
+    void computeGradient(double* P, unsigned int* inp_row_P, unsigned int* inp_col_P, double* inp_val_P, double* Y, int N, int D, double* dC, double theta);
     void computeExactGradient(double* P, double* Y, int N, int D, double* dC);
     double evaluateError(double* P, double* Y, int N, int D);
-    double evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int N, int D, double theta);
+    double evaluateError(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, int N, int D, double theta);
     void getCost(double* P, double* Y, int N, int D, double* costs);
-    void getCost(int* row_P, int* col_P, double* val_P, double* Y, int N, int D, double theta, double* costs);
+    void getCost(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, int N, int D, double theta, double* costs);
     void zeroMean(double* X, int N, int D);
     void computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity, bool distance_precomputed);
     template<double (*distance)( const DataPoint&, const DataPoint& )>
-    void computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K, bool verbose);
-    void computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, double threshold);
+    void computeGaussianPerplexity(double* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, double** _val_P, double perplexity, int K, bool verbose);
     void computeSquaredEuclideanDistance(double* X, int N, int D, double* DD);
     double randn();
 };
