@@ -144,8 +144,8 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims,
         
         // Stop lying about the P-values after a while, and switch momentum
         if(iter == stop_lying_iter) {
-          if(exact) { for(int i = 0; i < N * N; i++)        P[i] /= 12.0; }
-          else      { for(int i = 0; i < row_P[N]; i++) val_P[i] /= 12.0; }
+          if(exact) { for(int i = 0; i < N * N; i++)        P[i] /= exaggeration_factor; }
+          else      { for(int i = 0; i < row_P[N]; i++) val_P[i] /= exaggeration_factor; }
         }
         if(iter == mom_switch_iter) momentum = final_momentum;
         
