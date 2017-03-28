@@ -92,6 +92,8 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
                           momentum=0.5, final_momentum=0.8,
                           eta=200.0, exaggeration_factor=12.0, ...) {
   
+  is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
+  
   if (!is.logical(is_distance)) { stop("is_distance should be a logical variable")}
   if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("Incorrect theta.")}
   if (nrow(X) - 1 < 3 * perplexity) { stop("Perplexity is too large.")}
@@ -100,11 +102,9 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   if (is_distance & !(is.matrix(X) & (nrow(X)==ncol(X)))) { stop("Input is not an accepted distance matrix") }
   if (!is.null(Y_init) & (nrow(X)!=nrow(Y_init) || ncol(Y_init)!=dims)) { stop("Incorrect format for Y_init.") }
   if (!(is.logical(pca_center) && is.logical(pca_scale)) ) { stop("pca_center and pca_scale should be TRUE or FALSE")}
-  if (!is.integer(stop_lying_iter) || stop_lying_iter<0) { stop("stop_lying_iter should be a positive integer")}
-  if (!is.integer(mom_switch_iter) || mom_switch_iter<0) { stop("mom_switch_iter should be a positive integer")}
+  if (!is.wholenumber(stop_lying_iter) || stop_lying_iter<0) { stop("stop_lying_iter should be a positive integer")}
+  if (!is.wholenumber(mom_switch_iter) || mom_switch_iter<0) { stop("mom_switch_iter should be a positive integer")}
   if (!is.numeric(exaggeration_factor)) { stop("exaggeration_factor should be numeric")}
-  
-  is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
   
   # Apply PCA
