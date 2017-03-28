@@ -30,6 +30,7 @@
  *
  */
 
+#include "datapoint.h"
 
 #ifndef TSNE_H
 #define TSNE_H
@@ -60,7 +61,8 @@ private:
     void getCost(int* row_P, int* col_P, double* val_P, double* Y, int N, int D, double theta, double* costs);
     void zeroMean(double* X, int N, int D);
     void computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity, bool distance_precomputed);
-    void computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K, bool verbose, bool distance_precomputed);
+    template<double (*distance)( const DataPoint&, const DataPoint& )>
+    void computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K, bool verbose);
     void computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, double threshold);
     void computeSquaredEuclideanDistance(double* X, int N, int D, double* DD);
     double randn();
