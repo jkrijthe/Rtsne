@@ -2,9 +2,9 @@
 % Please edit documentation in R/Rtsne.R
 \name{Rtsne}
 \alias{Rtsne}
-\alias{Rtsne.data.frame}
 \alias{Rtsne.default}
 \alias{Rtsne.dist}
+\alias{Rtsne.data.frame}
 \title{Barnes-Hut implementation of t-Distributed Stochastic Neighbor Embedding}
 \usage{
 Rtsne(X, ...)
@@ -103,6 +103,7 @@ If \code{X} is a data.frame, it is transformed into a matrix using \code{\link{m
 
 \item \code{data.frame}: tsne on data.frame
 }}
+
 \examples{
 iris_unique <- unique(iris) # Remove duplicates
 iris_matrix <- as.matrix(iris_unique[,1:4])
@@ -125,4 +126,3 @@ Maaten, L. Van Der, 2014. Accelerating t-SNE using Tree-Based Algorithms. Journa
 
 van der Maaten, L.J.P. & Hinton, G.E., 2008. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research, 9, pp.2579-2605.
 }
-
