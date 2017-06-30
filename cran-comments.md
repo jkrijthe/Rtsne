@@ -1,3 +1,5 @@
+Improved description with a reference to the website containing the original implementation used in this wrapper.
+
 ## Test environments
 * local OS X install, R 3.3.2 and R-devel
 * win-builder (devel and release)

@@ -2,6 +2,6 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 Rtsne_cpp <- function(X, no_dims_in, perplexity_in, theta_in, verbose, max_iter, distance_precomputed, Y_in, init, stop_lying_iter_in, mom_switch_iter_in, momentum_in, final_momentum_in, eta_in, exaggeration_factor_in) {
-    .Call('Rtsne_Rtsne_cpp', PACKAGE = 'Rtsne', X, no_dims_in, perplexity_in, theta_in, verbose, max_iter, distance_precomputed, Y_in, init, stop_lying_iter_in, mom_switch_iter_in, momentum_in, final_momentum_in, eta_in, exaggeration_factor_in)
+    .Call(Rtsne_Rtsne_cpp, X, no_dims_in, perplexity_in, theta_in, verbose, max_iter, distance_precomputed, Y_in, init, stop_lying_iter_in, mom_switch_iter_in, momentum_in, final_momentum_in, eta_in, exaggeration_factor_in)
 }
 

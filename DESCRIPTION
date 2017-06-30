@@ -7,7 +7,7 @@ Authors@R: c(
     person("Laurens", "van der Maaten", role = c("cph"), comment = "Author of original C++ code")
     )
 Description: An R wrapper around the fast T-distributed Stochastic
-    Neighbor Embedding implementation by Van der Maaten.
+    Neighbor Embedding implementation by Van der Maaten  (see <https://github.com/lvdmaaten/bhtsne/> for more information on the original implementation).
 License: BSD_3_clause + file LICENSE
 URL: https://github.com/jkrijthe/Rtsne
 Imports:

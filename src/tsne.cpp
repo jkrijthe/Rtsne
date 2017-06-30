@@ -93,21 +93,21 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims,
     if(exact) {
         
         // Compute similarities
-        P = (double*) malloc(N * N * sizeof(double));
+        P = (double*) malloc((long)N * N * sizeof(double));
         if(P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
         computeGaussianPerplexity(X, N, D, P, perplexity, distance_precomputed);
     
         // Symmetrize input similarities
         if (verbose) Rprintf("Symmetrizing...\n");
-        for(int n = 0; n < N; n++) {
-            for(int m = n + 1; m < N; m++) {
+        for(unsigned long n = 0; n < N; n++) {
+            for(unsigned long m = n + 1; m < N; m++) {
                 P[n * N + m] += P[m * N + n];
                 P[m * N + n]  = P[n * N + m];
             }
         }
         double sum_P = .0;
-        for(int i = 0; i < N * N; i++) sum_P += P[i];
-        for(int i = 0; i < N * N; i++) P[i] /= sum_P;
+        for(unsigned long i = 0; i < (long)N * N; i++) sum_P += P[i];
+        for(unsigned long i = 0; i < (long)N * N; i++) P[i] /= sum_P;
     }
     
     // Compute input similarities for approximate t-SNE
@@ -125,8 +125,8 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims,
     end = clock();
     
     // Lie about the P-values
-    if(exact) { for(int i = 0; i < N * N; i++)        P[i] *= exaggeration_factor; }
-    else {      for(int i = 0; i < row_P[N]; i++) val_P[i] *= exaggeration_factor; }
+    if(exact) { for(unsigned long i = 0; i < (long)N * N; i++)        P[i] *= exaggeration_factor; }
+    else {      for(unsigned long i = 0; i < row_P[N]; i++) val_P[i] *= exaggeration_factor; }
 
 	// Initialize solution (randomly), if not already done
 	if (!init) { for(int i = 0; i < N * no_dims; i++) Y[i] = randn() * .0001; }
@@ -144,7 +144,7 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims,
         
         // Stop lying about the P-values after a while, and switch momentum
         if(iter == stop_lying_iter) {
-          if(exact) { for(int i = 0; i < N * N; i++)        P[i] /= exaggeration_factor; }
+          if(exact) { for(unsigned long i = 0; i < (long)N * N; i++)        P[i] /= exaggeration_factor; }
           else      { for(int i = 0; i < row_P[N]; i++) val_P[i] /= exaggeration_factor; }
         }
         if(iter == mom_switch_iter) momentum = final_momentum;
@@ -233,16 +233,16 @@ void TSNE::computeExactGradient(double* P, double* Y, int N, int D, double* dC) 
 	for(int i = 0; i < N * D; i++) dC[i] = 0.0;
     
     // Compute the squared Euclidean distance matrix
-    double* DD = (double*) malloc(N * N * sizeof(double));
+    double* DD = (double*) malloc((long)N * N * sizeof(double));
     if(DD == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     computeSquaredEuclideanDistance(Y, N, D, DD);
     
     // Compute Q-matrix and normalization sum
-    double* Q    = (double*) malloc(N * N * sizeof(double));
+    double* Q    = (double*) malloc((long)N * N * sizeof(double));
     if(Q == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     double sum_Q = .0;
-    for(int n = 0; n < N; n++) {
-    	for(int m = 0; m < N; m++) {
+    for(unsigned long n = 0; n < N; n++) {
+    	for(unsigned long m = 0; m < N; m++) {
             if(n != m) {
                 Q[n * N + m] = 1 / (1 + DD[n * N + m]);
                 sum_Q += Q[n * N + m];
@@ -251,8 +251,8 @@ void TSNE::computeExactGradient(double* P, double* Y, int N, int D, double* dC) 
     }
     
 	// Perform the computation of the gradient
-	for(int n = 0; n < N; n++) {
-    	for(int m = 0; m < N; m++) {
+	for(unsigned long n = 0; n < N; n++) {
+    	for(unsigned long m = 0; m < N; m++) {
             if(n != m) {
                 double mult = (P[n * N + m] - (Q[n * N + m] / sum_Q)) * Q[n * N + m];
                 for(int d = 0; d < D; d++) {
@@ -272,15 +272,15 @@ void TSNE::computeExactGradient(double* P, double* Y, int N, int D, double* dC) 
 double TSNE::evaluateError(double* P, double* Y, int N, int D) {
     
     // Compute the squared Euclidean distance matrix
-    double* DD = (double*) malloc(N * N * sizeof(double));
-    double* Q = (double*) malloc(N * N * sizeof(double));
+    double* DD = (double*) malloc((long)N * N * sizeof(double));
+    double* Q = (double*) malloc((long)N * N * sizeof(double));
     if(DD == NULL || Q == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     computeSquaredEuclideanDistance(Y, N, D, DD);
     
     // Compute Q-matrix and normalization sum
     double sum_Q = DBL_MIN;
-    for(int n = 0; n < N; n++) {
-    	for(int m = 0; m < N; m++) {
+    for(unsigned long n = 0; n < N; n++) {
+    	for(unsigned long m = 0; m < N; m++) {
             if(n != m) {
                 Q[n * N + m] = 1 / (1 + DD[n * N + m]);
                 sum_Q += Q[n * N + m];
@@ -288,15 +288,15 @@ double TSNE::evaluateError(double* P, double* Y, int N, int D) {
             else Q[n * N + m] = DBL_MIN;
         }
     }
-    for(int i = 0; i < N * N; i++) Q[i] /= sum_Q;
+    for(unsigned long i = 0; i < (long)N * N; i++) Q[i] /= sum_Q;
     
     // Sum t-SNE error
     double C = .0;
-	for(int n = 0; n < N; n++) {
-		for(int m = 0; m < N; m++) {
-			C += P[n * N + m] * log((P[n * N + m] + 1e-9) / (Q[n * N + m] + 1e-9));
-		}
-	}
+  	for(unsigned long n = 0; n < N; n++) {
+  		for(unsigned long m = 0; m < N; m++) {
+  			C += P[n * N + m] * log((P[n * N + m] + 1e-9) / (Q[n * N + m] + 1e-9));
+  		}
+  	}
     
     // Clean up memory
     free(DD);
@@ -340,15 +340,15 @@ double TSNE::evaluateError(int* row_P, int* col_P, double* val_P, double* Y, int
 void TSNE::getCost(double* P, double* Y, int N, int D, double* costs) {
   
   // Compute the squared Euclidean distance matrix
-  double* DD = (double*) malloc(N * N * sizeof(double));
-  double* Q = (double*) malloc(N * N * sizeof(double));
+  double* DD = (double*) malloc((long)N * N * sizeof(double));
+  double* Q = (double*) malloc((long)N * N * sizeof(double));
   if(DD == NULL || Q == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
   computeSquaredEuclideanDistance(Y, N, D, DD);
   
   // Compute Q-matrix and normalization sum
   double sum_Q = DBL_MIN;
-  for(int n = 0; n < N; n++) {
-    for(int m = 0; m < N; m++) {
+  for(unsigned long n = 0; n < N; n++) {
+    for(unsigned long m = 0; m < N; m++) {
       if(n != m) {
         Q[n * N + m] = 1 / (1 + DD[n * N + m]);
         sum_Q += Q[n * N + m];
@@ -356,12 +356,12 @@ void TSNE::getCost(double* P, double* Y, int N, int D, double* costs) {
       else Q[n * N + m] = DBL_MIN;
     }
   }
-  for(int i = 0; i < N * N; i++) Q[i] /= sum_Q;
+  for(unsigned long i = 0; i < (long)N * N; i++) Q[i] /= sum_Q;
   
   // Sum t-SNE error
-  for(int n = 0; n < N; n++) {
+  for(unsigned long n = 0; n < N; n++) {
     costs[n] = 0.0;
-    for(int m = 0; m < N; m++) {
+    for(unsigned long m = 0; m < N; m++) {
       costs[n] += P[n * N + m] * log((P[n * N + m] + 1e-9) / (Q[n * N + m] + 1e-9));
     }
   }
@@ -408,7 +408,7 @@ void TSNE::getCost(int* row_P, int* col_P, double* val_P, double* Y, int N, int 
 void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity, bool distance_precomputed) {
 	
 	// Compute the squared Euclidean distance matrix
-	double* DD = (double*) malloc(N * N * sizeof(double));
+	double* DD = (double*) malloc((long)N * N * sizeof(double));
     if(DD == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
 	
 	if (distance_precomputed) {
@@ -423,7 +423,7 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double 
 // 	}
 
 	// Compute the Gaussian kernel row by row
-	for(int n = 0; n < N; n++) {
+	for(unsigned long n = 0; n < N; n++) {
         
 		// Initialize some variables
 		bool found = false;
@@ -438,14 +438,14 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double 
 		while(!found && iter < 200) {
 			
 			// Compute Gaussian kernel row
-			for(int m = 0; m < N; m++) P[n * N + m] = exp(-beta * DD[n * N + m]);
+			for(unsigned long m = 0; m < N; m++) P[n * N + m] = exp(-beta * DD[n * N + m]);
 			P[n * N + n] = DBL_MIN;
 			
 			// Compute entropy of current row
 			sum_P = DBL_MIN;
-			for(int m = 0; m < N; m++) sum_P += P[n * N + m];
+			for(unsigned long m = 0; m < N; m++) sum_P += P[n * N + m];
 			double H = 0.0;
-			for(int m = 0; m < N; m++) H += beta * (DD[n * N + m] * P[n * N + m]);
+			for(unsigned long m = 0; m < N; m++) H += beta * (DD[n * N + m] * P[n * N + m]);
 			H = (H / sum_P) + log(sum_P);
 			
 			// Evaluate whether the entropy is within the tolerance level
@@ -475,7 +475,7 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double 
 		}
 		
 		// Row normalize P
-		for(int m = 0; m < N; m++) P[n * N + m] /= sum_P;
+		for(unsigned long m = 0; m < N; m++) P[n * N + m] /= sum_P;
 	}
 	
 	// Clean up memory
@@ -925,8 +925,8 @@ void TSNE::computeSquaredEuclideanDistance(double* X, int N, int D, double* DD) 
             dataSums[n] += (X[n * D + d] * X[n * D + d]);
         }
     }
-    for(int n = 0; n < N; n++) {
-        for(int m = 0; m < N; m++) {
+    for(unsigned long n = 0; n < N; n++) {
+        for(unsigned long m = 0; m < N; m++) {
             DD[n * N + m] = dataSums[n] + dataSums[m];
         }
     }
