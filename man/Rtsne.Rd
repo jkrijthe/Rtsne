@@ -22,7 +22,7 @@ Rtsne(X, ...)
 \method{Rtsne}{data.frame}(X, ...)
 }
 \arguments{
-\item{X}{matrix; Data matrix}
+\item{X}{matrix; Data matrix (each row is an observation, each column is a variable)}
 
 \item{...}{Other arguments that can be passed to Rtsne}
 
@@ -30,7 +30,7 @@ Rtsne(X, ...)
 
 \item{initial_dims}{integer; the number of dimensions that should be retained in the initial PCA step (default: 50)}
 
-\item{perplexity}{numeric; Perplexity parameter}
+\item{perplexity}{numeric; Perplexity parameter (should not be bigger than 3 * perplexity < nrow(X) - 1, see details for interpretation)}
 
 \item{theta}{numeric; Speed/accuracy trade-off (increase for less accuracy), set to 0.0 for exact TSNE (default: 0.5)}
 

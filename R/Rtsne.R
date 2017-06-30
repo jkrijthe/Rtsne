@@ -15,10 +15,10 @@
 #' 
 #' If \code{X} is a data.frame, it is transformed into a matrix using \code{\link{model.matrix}}. If \code{X} is a \code{\link{dist}} object, it is currently first expanded into a full distance matrix.
 #' 
-#' @param X matrix; Data matrix
+#' @param X matrix; Data matrix (each row is an observation, each column is a variable)
 #' @param dims integer; Output dimensionality (default: 2)
 #' @param initial_dims integer; the number of dimensions that should be retained in the initial PCA step (default: 50)
-#' @param perplexity numeric; Perplexity parameter
+#' @param perplexity numeric; Perplexity parameter (should not be bigger than 3 * perplexity < nrow(X) - 1, see details for interpretation)
 #' @param theta numeric; Speed/accuracy trade-off (increase for less accuracy), set to 0.0 for exact TSNE (default: 0.5)
 #' @param check_duplicates logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)
 #' @param pca logical; Whether an initial PCA step should be performed (default: TRUE)
