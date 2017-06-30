@@ -107,6 +107,10 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   if (!is.numeric(exaggeration_factor)) { stop("exaggeration_factor should be numeric")}
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
   
+  
+  # Check for missing values
+  X <- na.fail(X)
+  
   # Apply PCA
   if (pca & !is_distance) {
     pca_result <- prcomp(X,retx=TRUE,center = pca_center, scale. = pca_scale)
@@ -134,13 +138,13 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
 #' @describeIn Rtsne tsne on given dist object
 #' @export
 Rtsne.dist <- function(X,...,is_distance=TRUE) {
-  X <- as.matrix(X)
+  X <- as.matrix(na.fail(X))
   Rtsne(X, ..., is_distance=is_distance)
 }
 
 #' @describeIn Rtsne tsne on data.frame
 #' @export
 Rtsne.data.frame <- function(X,...) {
-  X <- model.matrix(~.-1,X)
+  X <- model.matrix(~.-1,na.fail(X))
   Rtsne(X, ...)
 }
