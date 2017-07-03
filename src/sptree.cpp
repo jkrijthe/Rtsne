@@ -346,11 +346,13 @@ void SPTree::computeNonEdgeForces(unsigned int point_index, double theta, double
   // Make sure that we spend no time on empty nodes or self-interactions
   if(cum_size == 0 || (is_leaf && size == 1 && index[0] == point_index)) return;
   
+  double* localbuff = (double*) malloc(dimension * sizeof(double));
+  
   // Compute distance between point and center-of-mass
   double D = .0;
   unsigned int ind = point_index * dimension;
-  for(unsigned int d = 0; d < dimension; d++) buff[d] = data[ind + d] - center_of_mass[d];
-  for(unsigned int d = 0; d < dimension; d++) D += buff[d] * buff[d];
+  for(unsigned int d = 0; d < dimension; d++) localbuff[d] = data[ind + d] - center_of_mass[d];
+  for(unsigned int d = 0; d < dimension; d++) D += localbuff[d] * localbuff[d];
   
   // Check whether we can use this node as a "summary"
   double max_width = 0.0;
@@ -366,7 +368,7 @@ void SPTree::computeNonEdgeForces(unsigned int point_index, double theta, double
     double mult = cum_size * D;
     *sum_Q += mult;
     mult *= D;
-    for(unsigned int d = 0; d < dimension; d++) neg_f[d] += mult * buff[d];
+    for(unsigned int d = 0; d < dimension; d++) neg_f[d] += mult * localbuff[d];
   }
   else {
     
@@ -380,23 +382,27 @@ void SPTree::computeNonEdgeForces(unsigned int point_index, double theta, double
 void SPTree::computeEdgeForces(unsigned int* row_P, unsigned int* col_P, double* val_P, int N, double* pos_f)
 {
   
+  unsigned int ind1;
+  unsigned int ind2;
+  double D;
+  
   // Loop over all edges in the graph
-  #pragma omp parallel for schedule(static)
+  #pragma omp parallel for shared(pos_f) private(ind1,ind2,D)
   for(unsigned int n = 0; n < N; n++) {
-    unsigned int ind1 = n*dimension;
+     ind1 = n*dimension;
     
     for(unsigned int i = row_P[n]; i < row_P[n + 1]; i++) {
       
       double* localbuff = (double*) malloc(dimension * sizeof(double));
       // Compute pairwise distance and Q-value
-      double D = 1.0;
-      unsigned int ind2 = col_P[i] * dimension;
-      for(unsigned int d = 0; d < dimension; d++) buff[d] = data[ind1 + d] - data[ind2 + d];
-      for(unsigned int d = 0; d < dimension; d++) D += buff[d] * buff[d];
+      D = 1.0;
+      ind2 = col_P[i] * dimension;
+      for(unsigned int d = 0; d < dimension; d++) localbuff[d] = data[ind1 + d] - data[ind2 + d];
+      for(unsigned int d = 0; d < dimension; d++) D += localbuff[d] * localbuff[d];
       D = val_P[i] / D;
       
       // Sum positive force
-      for(unsigned int d = 0; d < dimension; d++) pos_f[ind1 + d] += D * buff[d];
+      for(unsigned int d = 0; d < dimension; d++) pos_f[ind1 + d] += D * localbuff[d];
     }
   }
 }
