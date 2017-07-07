@@ -38,14 +38,14 @@
 
 static inline double sign_tsne(double x) { return (x == .0 ? .0 : (x < .0 ? -1.0 : 1.0)); }
 
-
+template <int NDims>
 class TSNE
 {    
 public:
     void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, 
              double theta, bool verbose, int max_iter, double* costs, 
              bool distance_precomputed, double* itercost, bool init, int stop_lying_iter, 
-             int mom_switch_iter, double momentum, double final_momentum, double eta, double exaggeration_factor);
+             int mom_switch_iter, double momentum, double final_momentum, double eta, double exaggeration_factor,int num_threads);
     void symmetrizeMatrix(unsigned int** row_P, unsigned int** col_P, double** val_P, int N); // should be static?!
 
     

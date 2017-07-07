@@ -3,11 +3,11 @@
 
 class DataPoint
 {
-  int _D;
   int _ind;
-  double* _x;
   
 public:
+  double* _x;
+  int _D;
   DataPoint() {
     _D = 1;
     _ind = -1;

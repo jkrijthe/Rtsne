@@ -35,6 +35,7 @@
 #' @param final_momentum numeric; Momentum used in the final part of the optimization (default: 0.8)
 #' @param eta numeric; Learning rate (default: 200.0)
 #' @param exaggeration_factor numeric; Exaggeration factor used to multiply the P matrix in the first part of the optimization (default: 12.0)
+#' @param num_threads integer; Number of threads to use using OpenMP, default (0) corresponds to using all available cores
 #' 
 #' @return List with the following elements:
 #' \item{Y}{Matrix containing the new representations for the objects}
@@ -90,7 +91,7 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
                           stop_lying_iter=ifelse(is.null(Y_init),250L,0L), 
                           mom_switch_iter=ifelse(is.null(Y_init),250L,0L), 
                           momentum=0.5, final_momentum=0.8,
-                          eta=200.0, exaggeration_factor=12.0, ...) {
+                          eta=200.0, exaggeration_factor=12.0, num_threads=0, ...) {
   
   is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
   
@@ -128,7 +129,7 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   }
   
   Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance, Y_init, init,
-            stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor)
+            stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads)
 }
 
 #' @describeIn Rtsne tsne on given dist object
