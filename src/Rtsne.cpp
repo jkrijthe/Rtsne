@@ -11,7 +11,7 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in,
                      double momentum_in, double final_momentum_in, 
                      double eta_in, double exaggeration_factor_in, unsigned int num_threads_in) {
 
-  int origN, N, D, no_dims = no_dims_in;
+  long origN, N, D, no_dims = no_dims_in;
 
 	double  *data;
   double perplexity = perplexity_in;
@@ -28,30 +28,31 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in,
     
 	data = (double*) calloc(D * origN, sizeof(double));
     if(data == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-    for (int i = 0; i < origN; i++){
-        for (int j = 0; j < D; j++){
+    for (unsigned long i = 0; i < origN; i++){
+        for (unsigned long j = 0; j < D; j++){
             data[i*D+j] = X(i,j);
         }
     }
     
-    // Make dummy landmarks
-    N = origN;
-    if (verbose) Rprintf("Read the %i x %i data matrix successfully!\n", N, D);
+  N = origN;
+  if (verbose) Rprintf("Read the %i x %i data matrix successfully!\n", N, D);
 
-		double* Y = (double*) malloc(N * no_dims * sizeof(double));
-		double* costs = (double*) calloc(N, sizeof(double));
-		double* itercosts = (double*) calloc((int)(ceil(max_iter/50.0)), sizeof(double));
-    if(Y == NULL || costs == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-    
-    // Initialize solution (randomly)
-    if (init) {
-      for (int i = 0; i < N; i++){
-        for (int j = 0; j < no_dims; j++){
-          Y[i*no_dims+j] = Y_in(i,j);
-        }
+
+	double* Y = (double*) malloc(N * no_dims * sizeof(double));
+	double* costs = (double*) calloc(N, sizeof(double));
+	double* itercosts = (double*) calloc((int)(ceil(max_iter/50.0)), sizeof(double));
+  if(Y == NULL || costs == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
+  
+  // Initialize solution (randomly)
+  if (init) {
+    for (int i = 0; i < N; i++){
+      for (int j = 0; j < no_dims; j++){
+        Y[i*no_dims+j] = Y_in(i,j);
       }
-      if (verbose) Rprintf("Using user supplied starting positions\n");
     }
+    if (verbose) Rprintf("Using user supplied starting positions\n");
+  }
+
     
     // Run tsne
     if (no_dims==1) {

@@ -15,10 +15,10 @@
 #' 
 #' If \code{X} is a data.frame, it is transformed into a matrix using \code{\link{model.matrix}}. If \code{X} is a \code{\link{dist}} object, it is currently first expanded into a full distance matrix.
 #' 
-#' @param X matrix; Data matrix
+#' @param X matrix; Data matrix (each row is an observation, each column is a variable)
 #' @param dims integer; Output dimensionality (default: 2)
 #' @param initial_dims integer; the number of dimensions that should be retained in the initial PCA step (default: 50)
-#' @param perplexity numeric; Perplexity parameter
+#' @param perplexity numeric; Perplexity parameter (should not be bigger than 3 * perplexity < nrow(X) - 1, see details for interpretation)
 #' @param theta numeric; Speed/accuracy trade-off (increase for less accuracy), set to 0.0 for exact TSNE (default: 0.5)
 #' @param check_duplicates logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)
 #' @param pca logical; Whether an initial PCA step should be performed (default: TRUE)
@@ -71,7 +71,7 @@
 #' # Use a given initialization of the locations of the points
 #' tsne_part1 <- Rtsne(iris_unique[,1:4], theta=0.0, pca=FALSE,max_iter=350)
 #' tsne_part2 <- Rtsne(iris_unique[,1:4], theta=0.0, pca=FALSE, max_iter=150,Y_init=tsne_part1$Y)
-#' @useDynLib Rtsne
+#' @useDynLib Rtsne, .registration = TRUE
 #' @import Rcpp
 #' @importFrom stats model.matrix prcomp
 #' 
@@ -108,6 +108,10 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   if (!is.numeric(exaggeration_factor)) { stop("exaggeration_factor should be numeric")}
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
   
+  
+  # Check for missing values
+  X <- na.fail(X)
+  
   # Apply PCA
   if (pca & !is_distance) {
     pca_result <- prcomp(X,retx=TRUE,center = pca_center, scale. = pca_scale)
@@ -135,13 +139,13 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
 #' @describeIn Rtsne tsne on given dist object
 #' @export
 Rtsne.dist <- function(X,...,is_distance=TRUE) {
-  X <- as.matrix(X)
+  X <- as.matrix(na.fail(X))
   Rtsne(X, ..., is_distance=is_distance)
 }
 
 #' @describeIn Rtsne tsne on data.frame
 #' @export
 Rtsne.data.frame <- function(X,...) {
-  X <- model.matrix(~.-1,X)
+  X <- model.matrix(~.-1,na.fail(X))
   Rtsne(X, ...)
 }

@@ -1,12 +1,13 @@
+Improved description with a reference to the website containing the original implementation used in this wrapper.
+
 ## Test environments
-* local OS X install, R 3.2.3
+* local OS X install, R 3.3.2 and R-devel
 * win-builder (devel and release)
 * ubuntu linux on Travis CI
 
 ## R CMD check results
-There were no ERRORs or WARNINGs. 
-
-1 NOTE: names are not misspelled
+1 NOTE: Possibly mis-spelled words in DESCRIPTION
+These are not mis-spelled.
 
 ## Downstream dependencies
-Checked compatibility with downstream stm package.
+Checked compatibility with downstream stm, dimRed and coRanking packages. One warning in the building of the vignette of stm which seems to be unrelated to Rtsne.

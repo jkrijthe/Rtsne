@@ -2,9 +2,9 @@
 % Please edit documentation in R/Rtsne.R
 \name{Rtsne}
 \alias{Rtsne}
-\alias{Rtsne.data.frame}
 \alias{Rtsne.default}
 \alias{Rtsne.dist}
+\alias{Rtsne.data.frame}
 \title{Barnes-Hut implementation of t-Distributed Stochastic Neighbor Embedding}
 \usage{
 Rtsne(X, ...)
@@ -22,7 +22,7 @@ Rtsne(X, ...)
 \method{Rtsne}{data.frame}(X, ...)
 }
 \arguments{
-\item{X}{matrix; Data matrix}
+\item{X}{matrix; Data matrix (each row is an observation, each column is a variable)}
 
 \item{...}{Other arguments that can be passed to Rtsne}
 
@@ -30,7 +30,7 @@ Rtsne(X, ...)
 
 \item{initial_dims}{integer; the number of dimensions that should be retained in the initial PCA step (default: 50)}
 
-\item{perplexity}{numeric; Perplexity parameter}
+\item{perplexity}{numeric; Perplexity parameter (should not be bigger than 3 * perplexity < nrow(X) - 1, see details for interpretation)}
 
 \item{theta}{numeric; Speed/accuracy trade-off (increase for less accuracy), set to 0.0 for exact TSNE (default: 0.5)}
 
@@ -103,6 +103,7 @@ If \code{X} is a data.frame, it is transformed into a matrix using \code{\link{m
 
 \item \code{data.frame}: tsne on data.frame
 }}
+
 \examples{
 iris_unique <- unique(iris) # Remove duplicates
 iris_matrix <- as.matrix(iris_unique[,1:4])
@@ -125,4 +126,3 @@ Maaten, L. Van Der, 2014. Accelerating t-SNE using Tree-Based Algorithms. Journa
 
 van der Maaten, L.J.P. & Hinton, G.E., 2008. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research, 9, pp.2579-2605.
 }
-
