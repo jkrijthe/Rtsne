@@ -15,7 +15,8 @@ Rtsne(X, ...)
   pca_center = TRUE, pca_scale = FALSE,
   stop_lying_iter = ifelse(is.null(Y_init), 250L, 0L),
   mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L), momentum = 0.5,
-  final_momentum = 0.8, eta = 200, exaggeration_factor = 12, ...)
+  final_momentum = 0.8, eta = 200, exaggeration_factor = 12,
+  num_threads = 0, ...)
 
 \method{Rtsne}{dist}(X, ..., is_distance = TRUE)
 
@@ -61,6 +62,8 @@ Rtsne(X, ...)
 \item{eta}{numeric; Learning rate (default: 200.0)}
 
 \item{exaggeration_factor}{numeric; Exaggeration factor used to multiply the P matrix in the first part of the optimization (default: 12.0)}
+
+\item{num_threads}{integer; Number of threads to use using OpenMP, default (0) corresponds to using all available cores}
 }
 \value{
 List with the following elements:
