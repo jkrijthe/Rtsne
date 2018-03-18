@@ -11,7 +11,8 @@ Description: An R wrapper around the fast T-distributed Stochastic
 License: BSD_3_clause + file LICENSE
 URL: https://github.com/jkrijthe/Rtsne
 Imports:
-    Rcpp (>= 0.11.0)
+    Rcpp (>= 0.11.0),
+    stats
 LinkingTo: Rcpp
 Suggests:
     testthat

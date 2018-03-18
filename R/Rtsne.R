@@ -72,7 +72,7 @@
 #' tsne_part2 <- Rtsne(iris_unique[,1:4], theta=0.0, pca=FALSE, max_iter=150,Y_init=tsne_part1$Y)
 #' @useDynLib Rtsne, .registration = TRUE
 #' @import Rcpp
-#' @importFrom stats model.matrix prcomp
+#' @importFrom stats model.matrix na.fail prcomp
 #' 
 #' @export
 Rtsne <- function (X, ...) {
