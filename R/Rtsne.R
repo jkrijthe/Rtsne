@@ -23,7 +23,7 @@
 #' @param check_duplicates logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)
 #' @param pca logical; Whether an initial PCA step should be performed (default: TRUE)
 #' @param max_iter integer; Number of iterations (default: 1000)
-#' @param verbose logical; Whether progress updates should be printed (default: FALSE)
+#' @param verbose logical; Whether progress updates should be printed (default: global "verbose" option, or FALSE if that is not set)
 #' @param ... Other arguments that can be passed to Rtsne
 #' @param is_distance logical; Indicate whether X is a distance matrix (experimental, default: FALSE)
 #' @param Y_init matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with exaggerated perplexity values and a larger momentum term will be skipped.
@@ -84,7 +84,7 @@ Rtsne <- function (X, ...) {
 Rtsne.default <- function(X, dims=2, initial_dims=50, 
                           perplexity=30, theta=0.5, 
                           check_duplicates=TRUE, 
-                          pca=TRUE, max_iter=1000,verbose=FALSE, 
+                          pca=TRUE, max_iter=1000,verbose=getOption("verbose", FALSE), 
                           is_distance=FALSE, Y_init=NULL, 
                           pca_center=TRUE, pca_scale=FALSE,
                           stop_lying_iter=ifelse(is.null(Y_init),250L,0L), 
