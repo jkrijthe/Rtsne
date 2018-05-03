@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // Rtsne_cpp
 Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in, double theta_in, bool verbose, int max_iter, bool distance_precomputed, NumericMatrix Y_in, bool init, int stop_lying_iter_in, int mom_switch_iter_in, double momentum_in, double final_momentum_in, double eta_in, double exaggeration_factor_in);
-RcppExport SEXP Rtsne_Rtsne_cpp(SEXP XSEXP, SEXP no_dims_inSEXP, SEXP perplexity_inSEXP, SEXP theta_inSEXP, SEXP verboseSEXP, SEXP max_iterSEXP, SEXP distance_precomputedSEXP, SEXP Y_inSEXP, SEXP initSEXP, SEXP stop_lying_iter_inSEXP, SEXP mom_switch_iter_inSEXP, SEXP momentum_inSEXP, SEXP final_momentum_inSEXP, SEXP eta_inSEXP, SEXP exaggeration_factor_inSEXP) {
+RcppExport SEXP _Rtsne_Rtsne_cpp(SEXP XSEXP, SEXP no_dims_inSEXP, SEXP perplexity_inSEXP, SEXP theta_inSEXP, SEXP verboseSEXP, SEXP max_iterSEXP, SEXP distance_precomputedSEXP, SEXP Y_inSEXP, SEXP initSEXP, SEXP stop_lying_iter_inSEXP, SEXP mom_switch_iter_inSEXP, SEXP momentum_inSEXP, SEXP final_momentum_inSEXP, SEXP eta_inSEXP, SEXP exaggeration_factor_inSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -29,4 +29,14 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(Rtsne_cpp(X, no_dims_in, perplexity_in, theta_in, verbose, max_iter, distance_precomputed, Y_in, init, stop_lying_iter_in, mom_switch_iter_in, momentum_in, final_momentum_in, eta_in, exaggeration_factor_in));
     return rcpp_result_gen;
 END_RCPP
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"_Rtsne_Rtsne_cpp", (DL_FUNC) &_Rtsne_Rtsne_cpp, 15},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_Rtsne(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }

@@ -11,8 +11,8 @@ Rtsne(X, ...)
 
 \method{Rtsne}{default}(X, dims = 2, initial_dims = 50, perplexity = 30,
   theta = 0.5, check_duplicates = TRUE, pca = TRUE, max_iter = 1000,
-  verbose = FALSE, is_distance = FALSE, Y_init = NULL,
-  pca_center = TRUE, pca_scale = FALSE,
+  verbose = getOption("verbose", FALSE), is_distance = FALSE,
+  Y_init = NULL, pca_center = TRUE, pca_scale = FALSE,
   stop_lying_iter = ifelse(is.null(Y_init), 250L, 0L),
   mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L), momentum = 0.5,
   final_momentum = 0.8, eta = 200, exaggeration_factor = 12, ...)
@@ -40,7 +40,7 @@ Rtsne(X, ...)
 
 \item{max_iter}{integer; Number of iterations (default: 1000)}
 
-\item{verbose}{logical; Whether progress updates should be printed (default: FALSE)}
+\item{verbose}{logical; Whether progress updates should be printed (default: global "verbose" option, or FALSE if that is not set)}
 
 \item{is_distance}{logical; Indicate whether X is a distance matrix (experimental, default: FALSE)}
 
