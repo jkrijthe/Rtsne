@@ -10,10 +10,10 @@
 Rtsne(X, ...)
 
 \method{Rtsne}{default}(X, dims = 2, initial_dims = 50, perplexity = 30,
-  theta = 0.5, check_duplicates = TRUE, pca = TRUE, max_iter = 1000,
-  verbose = getOption("verbose", FALSE), is_distance = FALSE,
-  Y_init = NULL, pca_center = TRUE, pca_scale = FALSE,
-  stop_lying_iter = ifelse(is.null(Y_init), 250L, 0L),
+  theta = 0.5, check_duplicates = TRUE, pca = TRUE, partial_pca = FALSE,
+  max_iter = 1000, verbose = getOption("verbose", FALSE),
+  is_distance = FALSE, Y_init = NULL, pca_center = TRUE,
+  pca_scale = FALSE, stop_lying_iter = ifelse(is.null(Y_init), 250L, 0L),
   mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L), momentum = 0.5,
   final_momentum = 0.8, eta = 200, exaggeration_factor = 12, ...)
 
@@ -37,6 +37,8 @@ Rtsne(X, ...)
 \item{check_duplicates}{logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)}
 
 \item{pca}{logical; Whether an initial PCA step should be performed (default: TRUE)}
+
+\item{partial_pca}{logical; Whether truncated PCA should be used to calculate principal components (requires the irlba package). This is faster for large input matrices (default: FALSE)}
 
 \item{max_iter}{integer; Number of iterations (default: 1000)}
 
