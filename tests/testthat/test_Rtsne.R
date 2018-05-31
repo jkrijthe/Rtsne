@@ -76,6 +76,19 @@ test_that("partial_pca FALSE and TRUE give similar results", {
   expect_equal(tsne_out_prcomp$costs, tsne_out_irlba$costs, tolerance = .0005, scale = 1)
 })
 
+test_that("partial_pca is faster than prcomp for large min(dim) datasets", {
+  fat_data <- rbind(sapply(runif(1000, -1,1), function(x) rnorm(1000,x)),
+                    sapply(runif(1000, -1,1), function(x) rnorm(1000,x)))
+  
+  set.seed(42)
+  tsne_out_prcomp <- system.time(Rtsne(fat_data, max_iter = 1))
+  
+  set.seed(42)
+  tsne_out_irlba <- system.time(Rtsne(fat_data, partial_pca = T, max_iter = 1))
+
+  expect_gt(tsne_out_prcomp[3], tsne_out_irlba[3])
+})
+
 # test_that("Continuing from initilization gives approximately the same result as direct run", {
 #   #Exact
 #   set.seed(50)
