@@ -62,6 +62,20 @@ test_that("Accepts data.frame", {
   expect_equal(tsne_out_matrix_bh$Y,tsne_out_df$Y)
 })
 
+test_that("partial_pca FALSE and TRUE give similar results", {
+  fat_data <- rbind(sapply(runif(200,-1,1), function(x) rnorm(200,x)),
+                    sapply(runif(200,-1,1), function(x) rnorm(200,x)))
+  
+  set.seed(42)
+  tsne_out_prcomp <- Rtsne(fat_data)
+  
+  set.seed(42)
+  tsne_out_irlba <- Rtsne(fat_data, partial_pca = T)
+  
+  # Sign of principal components are arbitrary so even with same seed tSNE coordinates are not the same
+  expect_equal(tsne_out_prcomp$costs, tsne_out_irlba$costs, tolerance = .0005, scale = 1)
+})
+
 # test_that("Continuing from initilization gives approximately the same result as direct run", {
 #   #Exact
 #   set.seed(50)
