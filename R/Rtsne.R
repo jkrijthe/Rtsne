@@ -119,8 +119,8 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
       if (!requireNamespace("irlba", quietly = TRUE)) {stop("Package \"irlba\" is required for partial PCA. Please install it.", call. = FALSE)}
       X <- irlba::prcomp_irlba(X, n = initial_dims, center = pca_center, scale = pca_scale)$x
     }else{
-      if(min(dim(X))>2500) message("Consider setting partial_pca=TRUE for large matrices")
-      X <- prcomp(X,retx=TRUE,center = pca_center, scale. = pca_scale, rank. = initial_dims)$x
+      if(verbose & min(dim(X))>2500) cat("Consider setting partial_pca=TRUE for large matrices\n")
+      X <- prcomp(X, retx=TRUE, center = pca_center, scale. = pca_scale, rank. = initial_dims)$x
     }
   }
   if (check_duplicates & !is_distance){
