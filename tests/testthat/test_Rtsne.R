@@ -63,6 +63,7 @@ test_that("Accepts data.frame", {
 })
 
 test_that("partial_pca FALSE and TRUE give similar results", {
+  set.seed(42)
   fat_data <- rbind(sapply(runif(200,-1,1), function(x) rnorm(200,x)),
                     sapply(runif(200,-1,1), function(x) rnorm(200,x)))
   
