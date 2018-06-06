@@ -22,6 +22,7 @@
 #' @param theta numeric; Speed/accuracy trade-off (increase for less accuracy), set to 0.0 for exact TSNE (default: 0.5)
 #' @param check_duplicates logical; Checks whether duplicates are present. It is best to make sure there are no duplicates present and set this option to FALSE, especially for large datasets (default: TRUE)
 #' @param pca logical; Whether an initial PCA step should be performed (default: TRUE)
+#' @param partial_pca logical; Whether truncated PCA should be used to calculate principal components (requires the irlba package). This is faster for large input matrices (default: FALSE)
 #' @param max_iter integer; Number of iterations (default: 1000)
 #' @param verbose logical; Whether progress updates should be printed (default: global "verbose" option, or FALSE if that is not set)
 #' @param ... Other arguments that can be passed to Rtsne
@@ -84,7 +85,7 @@ Rtsne <- function (X, ...) {
 Rtsne.default <- function(X, dims=2, initial_dims=50, 
                           perplexity=30, theta=0.5, 
                           check_duplicates=TRUE, 
-                          pca=TRUE, max_iter=1000,verbose=getOption("verbose", FALSE), 
+                          pca=TRUE, partial_pca=FALSE, max_iter=1000,verbose=getOption("verbose", FALSE), 
                           is_distance=FALSE, Y_init=NULL, 
                           pca_center=TRUE, pca_scale=FALSE,
                           stop_lying_iter=ifelse(is.null(Y_init),250L,0L), 
@@ -113,8 +114,14 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   
   # Apply PCA
   if (pca & !is_distance) {
-    pca_result <- prcomp(X,retx=TRUE,center = pca_center, scale. = pca_scale)
-    X <- pca_result$x[,1:min(initial_dims,ncol(pca_result$x))]
+    if(verbose) cat("Performing PCA\n")
+    if(partial_pca){
+      if (!requireNamespace("irlba", quietly = TRUE)) {stop("Package \"irlba\" is required for partial PCA. Please install it.", call. = FALSE)}
+      X <- irlba::prcomp_irlba(X, n = initial_dims, center = pca_center, scale = pca_scale)$x
+    }else{
+      if(verbose & min(dim(X))>2500) cat("Consider setting partial_pca=TRUE for large matrices\n")
+      X <- prcomp(X, retx=TRUE, center = pca_center, scale. = pca_scale, rank. = initial_dims)$x
+    }
   }
   if (check_duplicates & !is_distance){
     if (any(duplicated(X))) { stop("Remove duplicates before running TSNE.") }

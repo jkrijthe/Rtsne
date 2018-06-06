@@ -15,5 +15,6 @@ Imports:
     stats
 LinkingTo: Rcpp
 Suggests:
+    irlba,
     testthat
 RoxygenNote: 6.0.1
