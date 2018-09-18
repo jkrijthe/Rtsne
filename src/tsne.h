@@ -43,7 +43,7 @@ class TSNE
 public:
     void run(double* X, int N, int D, double* Y, int no_dims, double perplexity, 
              double theta, bool verbose, int max_iter, double* costs, 
-             bool distance_precomputed, double* itercost, bool init, int stop_lying_iter, 
+             bool distance_precomputed, double* itercost, double* Ytraces, bool init, int stop_lying_iter, 
              int mom_switch_iter, double momentum, double final_momentum, double eta, double exaggeration_factor);
     bool load_data(double** data, int* n, int* d, int* no_dims, double* theta, double* perplexity, int* rand_seed);
     void save_data(double* data, int* landmarks, double* costs, int n, int d);

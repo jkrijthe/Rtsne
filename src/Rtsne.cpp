@@ -6,7 +6,8 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in, 
                      double theta_in, bool verbose, int max_iter, 
-                     bool distance_precomputed, NumericMatrix Y_in, bool init, 
+                     bool distance_precomputed, NumericMatrix Y_in, bool init,
+                     bool traces,
                      int stop_lying_iter_in, int mom_switch_iter_in,
                      double momentum_in, double final_momentum_in, 
                      double eta_in, double exaggeration_factor_in) {
@@ -45,7 +46,12 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in,
 	double* Y = (double*) malloc(N * no_dims * sizeof(double));
 	double* costs = (double*) calloc(N, sizeof(double));
 	double* itercosts = (double*) calloc((int)(ceil(max_iter/50.0)), sizeof(double));
+	double* Ytraces = NULL;
   if(Y == NULL || costs == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
+  if(traces) {
+    Ytraces = (double*) malloc(N * no_dims * (max_iter+1) * sizeof(double));
+    if(Ytraces == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
+  }
   
   // Initialize solution (randomly)
   if (init) {
@@ -59,7 +65,7 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in,
   
   // Run tsne
 	tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs, distance_precomputed, 
-          itercosts, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor);
+          itercosts, Ytraces, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor);
 
 	// Save the results
   Rcpp::NumericMatrix Yr(N, no_dims);
@@ -97,5 +103,12 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in,
                                          Rcpp::_["final_momentum"]=final_momentum, 
                                          Rcpp::_["eta"]=eta, 
                                          Rcpp::_["exaggeration_factor"]=exaggeration_factor);
+  if (Ytraces != NULL) {
+    Rcpp::NumericVector Ytraces_r(Ytraces, Ytraces + N * no_dims * (max_iter+1));
+    Ytraces_r.attr("dim") = Rcpp::IntegerVector::create(no_dims, N, max_iter+1);
+    output["Y_traces"] = Ytraces_r;
+    free(Ytraces);
+    Ytraces = NULL;
+  }
   return output; 
 }

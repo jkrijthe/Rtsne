@@ -54,7 +54,7 @@ using namespace std;
 // Perform t-SNE
 void TSNE::run(double* X, int N, int D, double* Y, int no_dims, 
                double perplexity, double theta, bool verbose, int max_iter, double* cost, 
-               bool distance_precomputed, double* itercost, bool init, 
+               bool distance_precomputed, double* itercost, double* Ytraces, bool init,
                int stop_lying_iter, int mom_switch_iter, double momentum, double final_momentum, 
                double eta, double exaggeration_factor) {
     
@@ -72,6 +72,9 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims,
     double* uY    = (double*) malloc(N * no_dims * sizeof(double));
     double* gains = (double*) malloc(N * no_dims * sizeof(double));
     if(dY == NULL || uY == NULL || gains == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
+    if (Ytraces != NULL){
+        memcpy(Ytraces, Y, N * no_dims * sizeof(double)); // copy initial positions
+    }
     for(int i = 0; i < N * no_dims; i++)    uY[i] =  .0;
     for(int i = 0; i < N * no_dims; i++) gains[i] = 1.0;
     
@@ -180,6 +183,9 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims,
             itercost[costi] = C;
             itercost++;
 			  start = clock();
+        }
+        if (Ytraces != NULL) {
+            memcpy(Ytraces + N * no_dims * (iter + 1), Y, N * no_dims * sizeof(double)); // copy current positions
         }
     }
     end = clock(); total_time += (float) (end - start) / CLOCKS_PER_SEC;

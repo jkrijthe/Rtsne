@@ -86,7 +86,7 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
                           perplexity=30, theta=0.5, 
                           check_duplicates=TRUE, 
                           pca=TRUE, partial_pca=FALSE, max_iter=1000,verbose=getOption("verbose", FALSE), 
-                          is_distance=FALSE, Y_init=NULL, 
+                          is_distance=FALSE, Y_init=NULL, traces=FALSE,
                           pca_center=TRUE, pca_scale=FALSE,
                           stop_lying_iter=ifelse(is.null(Y_init),250L,0L), 
                           mom_switch_iter=ifelse(is.null(Y_init),250L,0L), 
@@ -138,7 +138,7 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
     init <- TRUE
   }
   
-  Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance, Y_init, init,
+  Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance, Y_init, init, traces,
             stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor)
 }
 
