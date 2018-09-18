@@ -28,6 +28,7 @@
 #' @param ... Other arguments that can be passed to Rtsne
 #' @param is_distance logical; Indicate whether X is a distance matrix (experimental, default: FALSE)
 #' @param Y_init matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with exaggerated perplexity values and a larger momentum term will be skipped.
+#' @param traces logical; Whether the output should contain the coordinates of the objects at each iteration of the method (Y_traces) (default: FALSE)
 #' @param pca_center logical; Should data be centered before pca is applied? (default: TRUE)
 #' @param pca_scale logical; Should data be scaled before pca is applied? (default: FALSE)
 #' @param stop_lying_iter integer; Iteration after which the perplexities are no longer exaggerated (default: 250, except when Y_init is used, then 0)
@@ -45,6 +46,7 @@
 #' \item{theta}{See above}
 #' \item{costs}{The cost for every object after the final iteration}
 #' \item{itercosts}{The total costs (KL-divergence) for all objects in every 50th + the last iteration}
+#' \item{Y_traces}{Optional, see traces. 3D array of size (dims, N objects, max_iter + 1) containing the embedded coordinates of objects at each iteration of the method}
 #' \item{stop_lying_iter}{Iteration after which the perplexities are no longer exaggerated}
 #' \item{mom_switch_iter}{Iteration after which the final momentum is used}
 #' \item{momentum}{Momentum used in the first part of the optimization}
