@@ -6,7 +6,9 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in, 
                      double theta_in, bool verbose, int max_iter, 
-                     bool distance_precomputed, NumericMatrix Y_in, bool init, 
+                     bool distance_precomputed, bool neighbors_precomputed,
+                     IntegerMatrix nn_dex, NumericMatrix nn_dist,
+                     NumericMatrix Y_in, bool init, 
                      int stop_lying_iter_in, int mom_switch_iter_in,
                      double momentum_in, double final_momentum_in, 
                      double eta_in, double exaggeration_factor_in) {
@@ -57,8 +59,22 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in,
     if (verbose) Rprintf("Using user supplied starting positions\n");
   }
   
+  // Check dimensions of precomputed nearest neighbour info
+  const int* nndex_ptr=NULL;
+  const double* nndist_ptr=NULL;
+  int precomp_k=0;
+  if (neighbors_precomputed) {
+    if (nn_dex.ncol()!=N) { Rcpp::stop("Number of columns of NN-index matrix not equal to the number of cells"); }
+    if (nn_dist.ncol()!=N) { Rcpp::stop("Number of columns of NN-distance matrix not equal to the number of cells"); }
+    precomp_k=nn_dex.nrow();
+    if (precomp_k!=nn_dist.nrow()) { Rcpp::stop("Number of rows of NN-index and NN-distance matrices should be equal"); }
+    nndex_ptr=nn_dex.begin();
+    nndist_ptr=nn_dist.begin();
+  }
+
   // Run tsne
 	tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs, distance_precomputed, 
+          neighbors_precomputed, precomp_k, nndex_ptr, nndist_ptr,
           itercosts, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor);
 
 	// Save the results

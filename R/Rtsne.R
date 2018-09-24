@@ -27,6 +27,7 @@
 #' @param verbose logical; Whether progress updates should be printed (default: global "verbose" option, or FALSE if that is not set)
 #' @param ... Other arguments that can be passed to Rtsne
 #' @param is_distance logical; Indicate whether X is a distance matrix (experimental, default: FALSE)
+#' @param nearest_neighbors list of two elements; Contains pre-computed nearest-neighbor search information. The first element should be an integer matrix of specifying the index of nearest neighbors for each observation, while the second element should be a double-precision matrix containing the distances to those neighbors. Each row of each matrix corresponds to an observation, and the number of columns should be equal to the number of neighbors. The number of neighbours should be greater than \code{perplexity}; a default of 3 times \code{perplexity} is used when \code{nearest_neighbors=NULL}.
 #' @param Y_init matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with exaggerated perplexity values and a larger momentum term will be skipped.
 #' @param pca_center logical; Should data be centered before pca is applied? (default: TRUE)
 #' @param pca_scale logical; Should data be scaled before pca is applied? (default: FALSE)
@@ -86,7 +87,7 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
                           perplexity=30, theta=0.5, 
                           check_duplicates=TRUE, 
                           pca=TRUE, partial_pca=FALSE, max_iter=1000,verbose=getOption("verbose", FALSE), 
-                          is_distance=FALSE, Y_init=NULL, 
+                          is_distance=FALSE, nearest_neighbors=NULL, Y_init=NULL, 
                           pca_center=TRUE, pca_scale=FALSE,
                           stop_lying_iter=ifelse(is.null(Y_init),250L,0L), 
                           mom_switch_iter=ifelse(is.null(Y_init),250L,0L), 
@@ -137,8 +138,19 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   } else {
     init <- TRUE
   }
+
+  if (!is.null(nearest_neighbors)) {
+    # Transposing for faster C-level access, -1 for zero indexing. 
+    has_neighbors <- TRUE
+    nndex <- t(nearest_neighbors[[1]] - 1L)
+    nndist <- t(nearest_neighbors[[2]])
+  } else {
+    has_neighbors <- FALSE
+    nndex <- matrix(0L)
+    nndist <- matrix(0)
+  }
   
-  Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance, Y_init, init,
+  Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance, has_neighbors, nndex, nndist, Y_init, init,
             stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor)
 }
 

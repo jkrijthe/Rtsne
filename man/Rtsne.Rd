@@ -9,13 +9,15 @@
 \usage{
 Rtsne(X, ...)
 
-\method{Rtsne}{default}(X, dims = 2, initial_dims = 50, perplexity = 30,
-  theta = 0.5, check_duplicates = TRUE, pca = TRUE, partial_pca = FALSE,
-  max_iter = 1000, verbose = getOption("verbose", FALSE),
-  is_distance = FALSE, Y_init = NULL, pca_center = TRUE,
-  pca_scale = FALSE, stop_lying_iter = ifelse(is.null(Y_init), 250L, 0L),
-  mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L), momentum = 0.5,
-  final_momentum = 0.8, eta = 200, exaggeration_factor = 12, ...)
+\method{Rtsne}{default}(X, dims = 2, initial_dims = 50,
+  perplexity = 30, theta = 0.5, check_duplicates = TRUE,
+  pca = TRUE, partial_pca = FALSE, max_iter = 1000,
+  verbose = getOption("verbose", FALSE), is_distance = FALSE,
+  nearest_neighbors = NULL, Y_init = NULL, pca_center = TRUE,
+  pca_scale = FALSE, stop_lying_iter = ifelse(is.null(Y_init), 250L,
+  0L), mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L),
+  momentum = 0.5, final_momentum = 0.8, eta = 200,
+  exaggeration_factor = 12, ...)
 
 \method{Rtsne}{dist}(X, ..., is_distance = TRUE)
 
@@ -45,6 +47,8 @@ Rtsne(X, ...)
 \item{verbose}{logical; Whether progress updates should be printed (default: global "verbose" option, or FALSE if that is not set)}
 
 \item{is_distance}{logical; Indicate whether X is a distance matrix (experimental, default: FALSE)}
+
+\item{nearest_neighbors}{list of two elements; Contains pre-computed nearest-neighbor search information. The first element should be an integer matrix of specifying the index of nearest neighbors for each observation, while the second element should be a double-precision matrix containing the distances to those neighbors. Each row of each matrix corresponds to an observation, and the number of columns should be equal to the number of neighbors. The number of neighbours should be greater than \code{perplexity}; a default of 3 times \code{perplexity} is used when \code{nearest_neighbors=NULL}.}
 
 \item{Y_init}{matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with exaggerated perplexity values and a larger momentum term will be skipped.}
 
