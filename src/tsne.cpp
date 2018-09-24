@@ -54,7 +54,8 @@ using namespace std;
 // Perform t-SNE
 void TSNE::run(double* X, int N, int D, double* Y, int no_dims, 
                double perplexity, double theta, bool verbose, int max_iter, double* cost, 
-               bool distance_precomputed, double* itercost, bool init, 
+               bool distance_precomputed, bool neighbors_precomputed, int precomputed_K, const int* nndex, const double* nndist,
+               double* itercost, bool init, 
                int stop_lying_iter, int mom_switch_iter, double momentum, double final_momentum, 
                double eta, double exaggeration_factor) {
     
@@ -112,10 +113,11 @@ void TSNE::run(double* X, int N, int D, double* Y, int no_dims,
     
     // Compute input similarities for approximate t-SNE
     else {
-    
+
         // Compute asymmetric pairwise input similarities
-        computeGaussianPerplexity(X, N, D, &row_P, &col_P, &val_P, perplexity, (int) (3 * perplexity), verbose, distance_precomputed);
-        
+        computeGaussianPerplexity(X, N, D, &row_P, &col_P, &val_P, perplexity, (neighbors_precomputed ? precomputed_K : (int) (3 * perplexity)), 
+                verbose, distance_precomputed, neighbors_precomputed, nndex, nndist);
+
         // Symmetrize input similarities
         symmetrizeMatrix(&row_P, &col_P, &val_P, N);
         double sum_P = .0;
@@ -485,7 +487,8 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, double 
 
 
 // Compute input similarities with a fixed perplexity using ball trees (this function allocates memory another function should free)
-void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K, bool verbose, bool distance_precomputed) {
+void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int** _col_P, double** _val_P, double perplexity, int K, bool verbose, bool distance_precomputed, 
+        bool neighbors_precomputed, const int* nndex, const double* nndist) {
     
     if(perplexity > K) Rprintf("Perplexity should be lower than K!\n");
     
@@ -503,8 +506,69 @@ void TSNE::computeGaussianPerplexity(double* X, int N, int D, int** _row_P, int*
     for(int n = 0; n < N; n++) row_P[n + 1] = row_P[n] + K;    
     
     // Build ball tree on data set
-    
-    if (distance_precomputed) {
+    if (neighbors_precomputed) {
+      const int* indices=nndex;
+      const double * distances=nndist;
+      for (int n=0; n<N; n++, indices+=K, distances+=K) {
+
+        if(n % 10000 == 0 && verbose) Rprintf(" - point %d of %d\n", n, N);
+
+        // Initialize some variables for binary search
+        bool found = false;
+        double beta = 1.0;
+        double min_beta = -DBL_MAX;
+        double max_beta =  DBL_MAX;
+        double tol = 1e-5;
+        
+        // Iterate until we found a good perplexity
+        int iter = 0; double sum_P;
+        while(!found && iter < 200) {
+          
+          // Compute Gaussian kernel row (no +1 here, as 'indices' does not have self as a neighbor).
+          for(int m = 0; m < K; m++) cur_P[m] = exp(-beta * distances[m] * distances[m]);
+          
+          // Compute entropy of current row
+          sum_P = DBL_MIN;
+          for(int m = 0; m < K; m++) sum_P += cur_P[m];
+          double H = .0;
+          for(int m = 0; m < K; m++) H += beta * (distances[m] * distances[m] * cur_P[m]);
+          H = (H / sum_P) + log(sum_P);
+          
+          // Evaluate whether the entropy is within the tolerance level
+          double Hdiff = H - log(perplexity);
+          if(Hdiff < tol && -Hdiff < tol) {
+            found = true;
+          }
+          else {
+            if(Hdiff > 0) {
+              min_beta = beta;
+              if(max_beta == DBL_MAX || max_beta == -DBL_MAX)
+                beta *= 2.0;
+              else
+                beta = (beta + max_beta) / 2.0;
+            }
+            else {
+              max_beta = beta;
+              if(min_beta == -DBL_MAX || min_beta == DBL_MAX)
+                beta /= 2.0;
+              else
+                beta = (beta + min_beta) / 2.0;
+            }
+          }
+          
+          // Update iteration counter
+          iter++;
+        }
+        
+        // Row-normalize current row of P and store in matrix
+        for(int m = 0; m < K; m++) cur_P[m] /= sum_P;
+        for(int m = 0; m < K; m++) {
+          col_P[row_P[n] + m] = indices[m];
+          val_P[row_P[n] + m] = cur_P[m];
+        }
+      }
+
+    } else if (distance_precomputed) {
       VpTree<DataPoint, precomputed_distance>* tree = new VpTree<DataPoint, precomputed_distance>();
       vector<DataPoint> obj_X(N, DataPoint(D, -1, X));
       for(int n = 0; n < N; n++) obj_X[n] = DataPoint(D, n, X + n * D);
