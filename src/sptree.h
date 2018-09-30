@@ -30,89 +30,90 @@
  *
  */
 
-
 #ifndef SPTREE_H
 #define SPTREE_H
 
 using namespace std;
 
-//static inline double min(double x, double y) { return (x <= y ? x : y); }
-//static inline double max(double x, double y) { return (x <= y ? y : x); }
 static inline double max_tsne(double x, double y) { return (x <= y ? y : x); }
 
+template <int NDims=2>
 class Cell {
-
-    int dimension;
-    double* corner;
-    double* width;
-    
-    
+  double corner[NDims];
+  double width[NDims];
+  
+  
 public:
-    Cell(int inp_dimension);
-    Cell(int inp_dimension, double* inp_corner, double* inp_width);
-    ~Cell();
-    
-    double getCorner(int d);
-    double getWidth(int d);
-    void setCorner(int d, double val);
-    void setWidth(int d, double val);
-    bool containsPoint(double point[]);
+  Cell();
+  Cell(double* inp_corner, double* inp_width);
+  ~Cell();
+  
+  double getCorner(unsigned int d) const;
+  double getWidth(unsigned int d) const;
+  void setCorner(unsigned int d, double val);
+  void setWidth(unsigned int d, double val);
+  bool containsPoint(double point[]) const;
 };
 
-
+template <int NDims=2>
 class SPTree
 {
-    
-    // Fixed constants    
-    static const int QT_NODE_CAPACITY = 1;
-
-    // A buffer we use when doing force computations
-    double* buff;
-    
-    // Properties of this node in the tree
-    SPTree* parent;
-    int dimension;
-    bool is_leaf;
-    int size;
-    int cum_size;
-        
-    // Axis-aligned bounding box stored as a center with half-dimensions to represent the boundaries of this quad tree
-    Cell* boundary;
-    
-    // Indices in this space-partitioning tree node, corresponding center-of-mass, and list of all children
-    double* data;
-    double* center_of_mass;
-    int index[QT_NODE_CAPACITY];
-    
-    // Children
-    SPTree** children;
-    int no_children;
-    
 public:
-    SPTree(int D, double* inp_data, int N);
-    SPTree(int D, double* inp_data, double* inp_corner, double* inp_width);
-    SPTree(int D, double* inp_data, int N, double* inp_corner, double* inp_width);
-    SPTree(SPTree* inp_parent, int D, double* inp_data, int N, double* inp_corner, double* inp_width);
-    SPTree(SPTree* inp_parent, int D, double* inp_data, double* inp_corner, double* inp_width);
-    ~SPTree();
-    void setData(double* inp_data);
-    SPTree* getParent();
-    void construct(Cell boundary);
-    bool insert(int new_index);
-    void subdivide();
-    bool isCorrect();
-    void rebuildTree();
-    void getAllIndices(int* indices);
-    int getDepth();
-    void computeNonEdgeForces(int point_index, double theta, double neg_f[], double* sum_Q);
-    void computeEdgeForces(int* row_P, int* col_P, double* val_P, int N, double* pos_f);    
-    void print();
-    
+  enum { no_children = 2 * SPTree<NDims-1>::no_children };
+  
 private:
-    void init(SPTree* inp_parent, int D, double* inp_data, double* inp_corner, double* inp_width);
-    void fill(int N);
-    int getAllIndices(int* indices, int loc);
-    bool isChild(int test_index, int start, int end);
+  // Fixed constants
+  static const unsigned int QT_NODE_CAPACITY = 1;
+  
+  // Properties of this node in the tree
+  SPTree<NDims>* parent;
+  unsigned int dimension;
+  bool is_leaf;
+  unsigned int size;
+  unsigned int cum_size;
+  
+  // Axis-aligned bounding box stored as a center with half-dimensions to represent the boundaries of this quad tree
+  Cell<NDims> boundary;
+  
+  // Indices in this space-partitioning tree node, corresponding center-of-mass, and list of all children
+  double* data;
+  double center_of_mass[NDims];
+  unsigned int index[QT_NODE_CAPACITY];
+  
+  // Children
+  SPTree<NDims>* children[no_children];
+  
+public:
+  SPTree(double* inp_data, unsigned int N);
+  SPTree(double* inp_data, double* inp_corner, double* inp_width);
+  SPTree(double* inp_data, unsigned int N, double* inp_corner, double* inp_width);
+  SPTree(SPTree* inp_parent, double* inp_data, unsigned int N, double* inp_corner, double* inp_width);
+  SPTree(SPTree* inp_parent, double* inp_data, double* inp_corner, double* inp_width);
+  ~SPTree();
+  void setData(double* inp_data);
+  SPTree* getParent();
+  void construct(Cell<NDims> boundary);
+  bool insert(unsigned int new_index);
+  void subdivide();
+  bool isCorrect();
+  void rebuildTree();
+  void getAllIndices(unsigned int* indices);
+  unsigned int getDepth();
+  double computeNonEdgeForces(unsigned int point_index, double theta, double neg_f[]) const;
+  void computeEdgeForces(unsigned int* row_P, unsigned int* col_P, double* val_P, int N, double* pos_f) const;
+  void print();
+  
+private:
+  void init(SPTree* inp_parent, double* inp_data, double* inp_corner, double* inp_width);
+  void fill(unsigned int N);
+  unsigned int getAllIndices(unsigned int* indices, unsigned int loc);
+  bool isChild(unsigned int test_index, unsigned int start, unsigned int end);
+};
+
+template <>
+struct SPTree<0>
+{
+  enum { 	no_children = 1 };
 };
 
 #endif

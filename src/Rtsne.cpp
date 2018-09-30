@@ -9,12 +9,11 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in,
                      bool distance_precomputed, NumericMatrix Y_in, bool init, 
                      int stop_lying_iter_in, int mom_switch_iter_in,
                      double momentum_in, double final_momentum_in, 
-                     double eta_in, double exaggeration_factor_in) {
+                     double eta_in, double exaggeration_factor_in, unsigned int num_threads_in) {
 
   long origN, N, D, no_dims = no_dims_in;
 
 	double  *data;
-  TSNE* tsne = new TSNE();
   double perplexity = perplexity_in;
   double theta = theta_in;
   int stop_lying_iter = stop_lying_iter_in;
@@ -35,12 +34,9 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in,
         }
     }
     
-  // Make dummy landmarks
   N = origN;
   if (verbose) Rprintf("Read the %i x %i data matrix successfully!\n", N, D);
-  int* landmarks = (int*) malloc(N * sizeof(int));
-  if(landmarks == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-  for(int n = 0; n < N; n++) landmarks[n] = n;
+
 
 	double* Y = (double*) malloc(N * no_dims * sizeof(double));
 	double* costs = (double*) calloc(N, sizeof(double));
@@ -56,46 +52,62 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims_in, double perplexity_in,
     }
     if (verbose) Rprintf("Using user supplied starting positions\n");
   }
-  
-  // Run tsne
-	tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs, distance_precomputed, 
-          itercosts, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor);
 
-	// Save the results
-  Rcpp::NumericMatrix Yr(N, no_dims);
-  for (int i = 0; i < N; i++){
-      for (int j = 0; j < no_dims; j++){
-          Yr(i,j) = Y[i*no_dims+j];
-      }
-  }
-  
-  Rcpp::NumericVector costsr(N);
-  for (int i = 0; i < N; i++){
-    costsr(i) = costs[i];
-  }
-  Rcpp::NumericVector itercostsr((int)(ceil(max_iter/50.0)));
-  for (int i = 0; i < (int)(ceil(max_iter/50.0)); i++) {
-    itercostsr(i) = itercosts[i];
-  }
-  
-  free(data); data = NULL;
-	free(Y); Y = NULL;
-	free(costs); costs = NULL;
-	free(landmarks); landmarks = NULL;
-  delete(tsne);
-  
-  Rcpp::List output = Rcpp::List::create(Rcpp::_["theta"]=theta, 
-                                         Rcpp::_["perplexity"]=perplexity, 
-                                         Rcpp::_["N"]=N,
-                                         Rcpp::_["origD"]=D,
-                                         Rcpp::_["Y"]=Yr, 
-                                         Rcpp::_["costs"]=costsr, 
-                                         Rcpp::_["itercosts"]=itercostsr,
-                                         Rcpp::_["stop_lying_iter"]=stop_lying_iter, 
-                                         Rcpp::_["mom_switch_iter"]=mom_switch_iter, 
-                                         Rcpp::_["momentum"]=momentum, 
-                                         Rcpp::_["final_momentum"]=final_momentum, 
-                                         Rcpp::_["eta"]=eta, 
-                                         Rcpp::_["exaggeration_factor"]=exaggeration_factor);
-  return output; 
+    
+    // Run tsne
+    if (no_dims==1) {
+      TSNE<1>* tsne = new TSNE<1>();
+		  tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs, distance_precomputed, 
+            itercosts, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads_in);
+		  delete(tsne);
+    } else if (no_dims==2) {
+      TSNE<2>* tsne = new TSNE<2>();
+      tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs, distance_precomputed, 
+                itercosts, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads_in);
+      delete(tsne);
+    } else if (no_dims==3) {
+      TSNE<3>* tsne = new TSNE<3>();
+      tsne->run(data, N, D, Y, no_dims, perplexity, theta, verbose, max_iter, costs, distance_precomputed, 
+                itercosts, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads_in);
+      delete(tsne);
+    } else {
+      Rcpp::stop("Only 1, 2 or 3 dimensional output is suppported.\n");
+    }
+    
+  	// Save the results
+    Rcpp::NumericMatrix Yr(N, no_dims);
+    for (int i = 0; i < N; i++){
+        for (int j = 0; j < no_dims; j++){
+            Yr(i,j) = Y[i*no_dims+j];
+        }
+    }
+    
+    Rcpp::NumericVector costsr(N);
+    for (int i = 0; i < N; i++){
+      costsr(i) = costs[i];
+    }
+    Rcpp::NumericVector itercostsr((int)(ceil(max_iter/50.0)));
+    for (int i = 0; i < (int)(ceil(max_iter/50.0)); i++) {
+      itercostsr(i) = itercosts[i];
+    }
+    
+    free(data); data = NULL;
+  	free(Y); Y = NULL;
+		free(costs); costs = NULL;
+    
+    
+    Rcpp::List output = Rcpp::List::create(Rcpp::_["theta"]=theta, 
+                                           Rcpp::_["perplexity"]=perplexity, 
+                                           Rcpp::_["N"]=N,
+                                           Rcpp::_["origD"]=D,
+                                           Rcpp::_["Y"]=Yr, 
+                                           Rcpp::_["costs"]=costsr, 
+                                           Rcpp::_["itercosts"]=itercostsr,
+                                           Rcpp::_["stop_lying_iter"]=stop_lying_iter, 
+                                           Rcpp::_["mom_switch_iter"]=mom_switch_iter, 
+                                           Rcpp::_["momentum"]=momentum, 
+                                           Rcpp::_["final_momentum"]=final_momentum, 
+                                           Rcpp::_["eta"]=eta, 
+                                           Rcpp::_["exaggeration_factor"]=exaggeration_factor);
+    return output; 
 }
