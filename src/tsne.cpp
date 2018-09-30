@@ -741,7 +741,7 @@ void TSNE<NDims>::zeroMean(double* X, int N, int D) {
 	
 	// Compute data mean
 	double* mean = (double*) calloc(D, sizeof(double));
-  if(mean == NULL) { printf("Memory allocation failed!\n"); exit(1); }
+  if(mean == NULL) {  Rcpp::stop("Memory allocation failed!\n"); }
   int nD = 0;
   for(int n = 0; n < N; n++) {
     for(int d = 0; d < D; d++) {
