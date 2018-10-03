@@ -60,6 +60,10 @@ private:
     void computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity, bool distance_precomputed);
     template<double (*distance)( const DataPoint&, const DataPoint& )>
     void computeGaussianPerplexity(double* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, double** _val_P, double perplexity, int K, bool verbose);
+    void computeGaussianPerplexity(const int* nn_dex, const double* nn_dist, int N, int D, unsigned int** _row_P, unsigned int** _col_P, double** _val_P, double perplexity, int K, bool verbose);
+    void allocateMemory(unsigned int** _row_P, unsigned int** _col_P, double** _val_P, int N, int K);
+    void computeProbabilities(const double perplexity, const int K, const double* distances, double* cur_P);
+
     void computeSquaredEuclideanDistance(double* X, int N, int D, double* DD);
     double randn();
 };
