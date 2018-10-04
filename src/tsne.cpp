@@ -58,14 +58,13 @@ extern "C" {
 
 using namespace std;
 
-// Perform t-SNE
 template <int NDims>
-void TSNE<NDims>::run(double* X, int N, int D, double* Y, int no_dims, 
-               double perplexity, double theta, bool verbose, int max_iter, double* cost, 
-               bool distance_precomputed, double* itercost, bool init, 
-               int stop_lying_iter, int mom_switch_iter, double momentum, double final_momentum, 
-               double eta, double exaggeration_factor, int num_threads) {
-    
+TSNE<NDims>::TSNE(double Perplexity, double Theta, bool Verbose, int Max_iter, bool Init, int Stop_lying_iter, 
+        int Mom_switch_iter, double Momentum, double Final_momentum, double Eta, double Exaggeration_factor, int Num_threads) :
+    perplexity(Perplexity), theta(Theta), momentum(Momentum), final_momentum(Final_momentum), eta(Eta), exaggeration_factor(Exaggeration_factor),
+    max_iter(Max_iter), stop_lying_iter(Stop_lying_iter), mom_switch_iter(Mom_switch_iter), num_threads(Num_threads),
+    verbose(Verbose), init(Init), exact(theta==.0) {
+
     // Print notice whether OpenMP is used
     #ifdef _OPENMP
       int threads = num_threads;
@@ -75,28 +74,20 @@ void TSNE<NDims>::run(double* X, int N, int D, double* Y, int no_dims,
       omp_set_num_threads(threads);
       if (verbose) Rprintf("OpenMP is working...\n");
     #endif
-    
-    
+
+    return;
+}
+
+// Perform t-SNE
+template <int NDims>
+void TSNE<NDims>::run(double* X, int N, int D, double* Y, bool distance_precomputed, double* cost, double* itercost) {
     // Determine whether we are using an exact algorithm
     if(N - 1 < 3 * perplexity) { Rcpp::stop("Perplexity too large for the number of data points!\n"); }
-    if (verbose) Rprintf("Using no_dims = %d, perplexity = %f, and theta = %f\n", no_dims, perplexity, theta);
-    bool exact = (theta == .0) ? true : false;
-    
-    // Set learning parameters
-    float total_time = .0;
-    clock_t start, end;
-    
-    // Allocate some memory
-    double* dY    = (double*) malloc(N * no_dims * sizeof(double));
-    double* uY    = (double*) malloc(N * no_dims * sizeof(double));
-    double* gains = (double*) malloc(N * no_dims * sizeof(double));
-    if(dY == NULL || uY == NULL || gains == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-    for(int i = 0; i < N * no_dims; i++)    uY[i] =  .0;
-    for(int i = 0; i < N * no_dims; i++) gains[i] = 1.0;
-    
+    if (verbose) Rprintf("Using no_dims = %d, perplexity = %f, and theta = %f\n", NDims, perplexity, theta);
+
     // Normalize input data (to prevent numerical problems)
     if (verbose) Rprintf("Computing input similarities...\n");
-    start = clock();
+    clock_t start = clock();
     if (!distance_precomputed) {
       if (verbose) Rprintf("Normalizing input...\n");
       zeroMean(X, N, D);
@@ -108,13 +99,9 @@ void TSNE<NDims>::run(double* X, int N, int D, double* Y, int no_dims,
     }
     
     // Compute input similarities for exact t-SNE
-    double* P; unsigned int* row_P; unsigned int* col_P; double* val_P;
     if(exact) {
-        
         // Compute similarities
-        P = (double*) malloc((long)N * N * sizeof(double));
-        if(P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-        computeGaussianPerplexity(X, N, D, P, perplexity, distance_precomputed);
+        computeGaussianPerplexity(X, N, D, distance_precomputed);
     
         // Symmetrize input similarities
         if (verbose) Rprintf("Symmetrizing...\n");
@@ -124,46 +111,89 @@ void TSNE<NDims>::run(double* X, int N, int D, double* Y, int no_dims,
                 P[m * N + n]  = P[n * N + m];
             }
         }
-        double sum_P = .0;
-        for(unsigned long i = 0; i < (long)N * N; i++) sum_P += P[i];
-        for(unsigned long i = 0; i < (long)N * N; i++) P[i] /= sum_P;
+
+        double sum_P = 0;
+        for(size_t i = 0; i < P.size(); i++) sum_P += P[i];
+        for(size_t i = 0; i < P.size(); i++) P[i] /= sum_P;
     }
     
     // Compute input similarities for approximate t-SNE
     else {
-    
+        int K=3*perplexity;
+
         // Compute asymmetric pairwise input similarities
         if (distance_precomputed) {
-          computeGaussianPerplexity<precomputed_distance>(X, N, D, &row_P, &col_P, &val_P, perplexity, (int) (3 * perplexity), verbose);
+          computeGaussianPerplexity<precomputed_distance>(X, N, D, K);
         } else {
-          computeGaussianPerplexity<euclidean_distance>(X, N, D, &row_P, &col_P, &val_P, perplexity, (int) (3 * perplexity), verbose);
+          computeGaussianPerplexity<euclidean_distance>(X, N, D, K);
         }
         
-        
-        
         // Symmetrize input similarities
-        symmetrizeMatrix(&row_P, &col_P, &val_P, N);
+        symmetrizeMatrix(N);
         double sum_P = .0;
         for(int i = 0; i < row_P[N]; i++) sum_P += val_P[i];
         for(int i = 0; i < row_P[N]; i++) val_P[i] /= sum_P;
     }
-    end = clock();
-    
+
+    if (verbose) {
+        clock_t end = clock();
+        if(exact) Rprintf("Done in %4.2f seconds!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC);
+        else Rprintf("Done in %4.2f seconds (sparsity = %f)!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC, (double) row_P[N] / ((double) N * (double) N));
+    }
+
+    trainIterations(N, Y, cost, itercost);
+    return;
+}
+
+// Perform t-SNE with nearest neighbor results.
+template<int NDims>
+void TSNE<NDims>::run(const int* nn_index, const double* nn_dist, int N, int K, double* Y, double* cost, double* itercost) {
+    // Determine whether we are using an exact algorithm
+    if(N - 1 < 3 * perplexity) { Rcpp::stop("Perplexity too large for the number of data points!\n"); }
+    if (verbose) Rprintf("Using no_dims = %d, perplexity = %f, and theta = %f\n", NDims, perplexity, theta);
+    if (verbose) Rprintf("Computing input similarities...\n");
+    clock_t start = clock();
+
+    // Compute asymmetric pairwise input similarities
+    computeGaussianPerplexity(nn_index, nn_dist, N, K);
+
+    // Symmetrize input similarities
+    symmetrizeMatrix(N);
+    double sum_P = .0;
+    for(int i = 0; i < row_P[N]; i++) sum_P += val_P[i];
+    for(int i = 0; i < row_P[N]; i++) val_P[i] /= sum_P;
+
+    if (verbose) {
+        clock_t end = clock();
+        if(exact) Rprintf("Done in %4.2f seconds!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC);
+        else Rprintf("Done in %4.2f seconds (sparsity = %f)!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC, (double) row_P[N] / ((double) N * (double) N));
+    }
+
+    trainIterations(N, Y, cost, itercost);
+    return;
+}
+  
+// Perform main training loop
+template<int NDims>
+void TSNE<NDims>::trainIterations(int N, double* Y, double* cost, double* itercost) {
+    // Allocate some memory
+    double* dY    = (double*) malloc(N * NDims * sizeof(double));
+    double* uY    = (double*) malloc(N * NDims * sizeof(double));
+    double* gains = (double*) malloc(N * NDims * sizeof(double));
+    if(dY == NULL || uY == NULL || gains == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
+    for(int i = 0; i < N * NDims; i++)    uY[i] =  .0;
+    for(int i = 0; i < N * NDims; i++) gains[i] = 1.0;
+
     // Lie about the P-values
-    if(exact) { for(unsigned long i = 0; i < (long)N * N; i++)        P[i] *= exaggeration_factor; }
-    else {      for(unsigned long i = 0; i < row_P[N]; i++) val_P[i] *= exaggeration_factor; }
+    if(exact) { for(unsigned long i = 0; i < (long)N * N; i++) P[i] *= exaggeration_factor; }
+    else {      for(unsigned long i = 0; i < row_P[N]; i++)    val_P[i] *= exaggeration_factor; }
 
 	// Initialize solution (randomly), if not already done
-	if (!init) { for(int i = 0; i < N * no_dims; i++) Y[i] = randn() * .0001; }
-
+	if (!init) { for(int i = 0; i < N * NDims; i++) Y[i] = randn() * .0001; }
 	
-	// Perform main training loop
-  if (verbose) {
-    if(exact) Rprintf("Done in %4.2f seconds!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC);
-    else Rprintf("Done in %4.2f seconds (sparsity = %f)!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC, (double) row_P[N] / ((double) N * (double) N));
-  }
-  start = clock();
-  int costi = 0; //iterator for saving the total costs for the iterations
+    clock_t start = clock(), end;
+    float total_time=0;
+    int costi = 0; //iterator for saving the total costs for the iterations
   
 	for(int iter = 0; iter < max_iter; iter++) {
         
@@ -175,26 +205,26 @@ void TSNE<NDims>::run(double* X, int N, int D, double* Y, int no_dims,
         if(iter == mom_switch_iter) momentum = final_momentum;
         
         // Compute (approximate) gradient
-        if(exact) computeExactGradient(P, Y, N, no_dims, dY);
-        else computeGradient(P, row_P, col_P, val_P, Y, N, no_dims, dY, theta);
+        if(exact) computeExactGradient(P.data(), Y, N, NDims, dY);
+        else computeGradient(P.data(), row_P.data(), col_P.data(), val_P.data(), Y, N, NDims, dY, theta);
         
         // Update gains
-        for(int i = 0; i < N * no_dims; i++) gains[i] = (sign_tsne(dY[i]) != sign_tsne(uY[i])) ? (gains[i] + .2) : (gains[i] * .8);
-        for(int i = 0; i < N * no_dims; i++) if(gains[i] < .01) gains[i] = .01;
+        for(int i = 0; i < N * NDims; i++) gains[i] = (sign_tsne(dY[i]) != sign_tsne(uY[i])) ? (gains[i] + .2) : (gains[i] * .8);
+        for(int i = 0; i < N * NDims; i++) if(gains[i] < .01) gains[i] = .01;
             
         // Perform gradient update (with momentum and gains)
-        for(int i = 0; i < N * no_dims; i++) uY[i] = momentum * uY[i] - eta * gains[i] * dY[i];
-		    for(int i = 0; i < N * no_dims; i++)  Y[i] = Y[i] + uY[i];
+        for(int i = 0; i < N * NDims; i++) uY[i] = momentum * uY[i] - eta * gains[i] * dY[i];
+		    for(int i = 0; i < N * NDims; i++)  Y[i] = Y[i] + uY[i];
         
         // Make solution zero-mean
-		    zeroMean(Y, N, no_dims);
+		    zeroMean(Y, N, NDims);
         
         // Print out progress
         if((iter > 0 && (iter+1) % 50 == 0) || iter == max_iter - 1) {
             end = clock();
             double C = .0;
-            if(exact) C = evaluateError(P, Y, N, no_dims);
-            else      C = evaluateError(row_P, col_P, val_P, Y, N, no_dims, theta);  // doing approximate computation here!
+            if(exact) C = evaluateError(P.data(), Y, N, NDims);
+            else      C = evaluateError(row_P.data(), col_P.data(), val_P.data(), Y, N, NDims, theta);  // doing approximate computation here!
             if(iter == 0) {
                 if (verbose) Rprintf("Iteration %d: error is %f\n", iter + 1, C);
             } 
@@ -209,23 +239,16 @@ void TSNE<NDims>::run(double* X, int N, int D, double* Y, int no_dims,
     }
     end = clock(); total_time += (float) (end - start) / CLOCKS_PER_SEC;
     
-    if(exact) getCost(P, Y, N, no_dims, cost);
-    else      getCost(row_P, col_P, val_P, Y, N, no_dims, theta, cost);  // doing approximate computation here!
-    
-    
+    if(exact) getCost(P.data(), Y, N, NDims, cost);
+    else      getCost(row_P.data(), col_P.data(), val_P.data(), Y, N, NDims, theta, cost);  // doing approximate computation here!
+
     // Clean up memory
     free(dY);
     free(uY);
     free(gains);
-    if(exact) free(P);
-    else {
-        free(row_P); row_P = NULL;
-        free(col_P); col_P = NULL;
-        free(val_P); val_P = NULL;
-    }
     if (verbose) Rprintf("Fitting performed in %4.2f seconds.\n", total_time);
+    return;
 }
-
 
 // Compute gradient of the t-SNE cost function (using Barnes-Hut algorithm)
 template <int NDims>
@@ -441,10 +464,13 @@ void TSNE<NDims>::getCost(unsigned int* row_P, unsigned int* col_P, double* val_
 
 // Compute input similarities with a fixed perplexity
 template <int NDims>
-void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, double* P, double perplexity, bool distance_precomputed) {
-	
+void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, bool distance_precomputed) {
+    size_t N2=N;
+    N2*=N;
+    P.resize(N2);
+
 	// Compute the squared Euclidean distance matrix
-	double* DD = (double*) malloc((long)N * N * sizeof(double));
+	double* DD = (double*) malloc(N2 * sizeof(double));
   if(DD == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
 	
 	if (distance_precomputed) {
@@ -523,15 +549,12 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, double* P, 
 // Compute input similarities with a fixed perplexity using ball trees (this function allocates memory another function should free)
 template <int NDims>
 template<double (*T)( const DataPoint&, const DataPoint& )>
-void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, unsigned int** _row_P, unsigned int** _col_P, double** _val_P, double perplexity, int K, bool verbose) {
+void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, int K) {
     
     if(perplexity > K) Rprintf("Perplexity should be lower than K!\n");
     
     // Allocate the memory we need
-    allocateMemory(_row_P, _col_P, _val_P, N, K);
-    unsigned int* row_P = *_row_P;
-    unsigned int* col_P = *_col_P;
-    double* val_P = *_val_P;
+    setupApproximateMemory(N, K);
     
     // Build ball tree on data set
       VpTree<DataPoint, T>* tree = new VpTree<DataPoint, T>();
@@ -554,10 +577,10 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, unsigned in
         // Find nearest neighbors
         tree->search(obj_X[n], K + 1, &indices, &distances);
 
-        double * cur_P = val_P + row_P[n];
+        double * cur_P = val_P.data() + row_P[n];
         computeProbabilities(perplexity, K, distances.data()+1, cur_P); // +1 to avoid self.
 
-        unsigned int * cur_col_P = col_P + row_P[n];
+        unsigned int * cur_col_P = col_P.data() + row_P[n];
         for (int m=0; m<K; ++m) {
             cur_col_P[m] = indices[m+1].index(); // +1 to avoid self.
         }
@@ -575,26 +598,22 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, unsigned in
 
 // Compute input similarities with a fixed perplexity from nearest-neighbour results.
 template<int NDims>
-void TSNE<NDims>::computeGaussianPerplexity(const int* nn_idx, const double* nn_dist, int N, int D, 
-        unsigned int** _row_P, unsigned int** _col_P, double** _val_P, double perplexity, int K, bool verbose) {
+void TSNE<NDims>::computeGaussianPerplexity(const int* nn_idx, const double* nn_dist, int N, int K) {
 
     if(perplexity > K) Rprintf("Perplexity should be lower than K!\n");
     
     // Allocate the memory we need
-    allocateMemory(_row_P, _col_P, _val_P, N, K);
-    unsigned int* row_P = *_row_P;
-    unsigned int* col_P = *_col_P;
-    double* val_P = *_val_P;
+    setupApproximateMemory(N, K);
     
     // Loop over all points to find nearest neighbors
     int steps_completed = 0;
     #pragma omp parallel for schedule(guided)
     for(int n = 0; n < N; n++) {
-      double * cur_P = val_P + row_P[n];
+      double * cur_P = val_P.data() + row_P[n];
       computeProbabilities(perplexity, K, nn_dist + row_P[n], cur_P);
 
       const int * cur_idx = nn_idx + row_P[n];
-      unsigned int * cur_col_P = col_P + row_P[n];
+      unsigned int * cur_col_P = col_P.data() + row_P[n];
       for (int m=0; m<K; ++m) {
           cur_col_P[m] = cur_idx[m];
       }
@@ -606,15 +625,11 @@ void TSNE<NDims>::computeGaussianPerplexity(const int* nn_idx, const double* nn_
     }
 }
 
-// Allocate memory for use in computeGaussianPerplexity (approximate).
 template<int NDims>
-void TSNE<NDims>::allocateMemory(unsigned int** _row_P, unsigned int** _col_P, double** _val_P, int N, int K) {
-    *_row_P = (unsigned int*)    malloc((N + 1) * sizeof(unsigned int));
-    *_col_P = (unsigned int*)    calloc(N * K, sizeof(unsigned int));
-    *_val_P = (double*) calloc(N * K, sizeof(double));
-    if(*_row_P == NULL || *_col_P == NULL || *_val_P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-
-    unsigned int* row_P=*_row_P;
+void TSNE<NDims>::setupApproximateMemory(int N, int K) {
+    row_P.resize(N+1);
+    col_P.resize(N*K);
+    val_P.resize(N*K);
     row_P[0] = 0;
     for(int n = 0; n < N; n++) row_P[n + 1] = row_P[n] + K;
     return;
@@ -678,13 +693,7 @@ void TSNE<NDims>::computeProbabilities (const double perplexity, const int K, co
 }
 
 template <int NDims>
-void TSNE<NDims>::symmetrizeMatrix(unsigned int** _row_P, unsigned int** _col_P, double** _val_P, int N) {
-    
-    // Get sparse matrix
-    unsigned int* row_P = *_row_P;
-    unsigned int* col_P = *_col_P;
-    double* val_P = *_val_P;
-
+void TSNE<NDims>::symmetrizeMatrix(int N) {
     // Count number of elements and row counts of symmetric matrix
     int* row_counts = (int*) calloc(N, sizeof(int));
     if(row_counts == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
@@ -707,10 +716,8 @@ void TSNE<NDims>::symmetrizeMatrix(unsigned int** _row_P, unsigned int** _col_P,
     for(int n = 0; n < N; n++) no_elem += row_counts[n];
     
     // Allocate memory for symmetrized matrix
-    unsigned int*    sym_row_P = (unsigned int*)    malloc((N + 1) * sizeof(unsigned int));
-    unsigned int*    sym_col_P = (unsigned int*)    malloc(no_elem * sizeof(unsigned int));
-    double* sym_val_P = (double*) malloc(no_elem * sizeof(double));
-    if(sym_row_P == NULL || sym_col_P == NULL || sym_val_P == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
+    std::vector<unsigned int> sym_row_P(N+1), sym_col_P(no_elem);
+    std::vector<double> sym_val_P(no_elem);
     
     // Construct new row indices for symmetric matrix
     sym_row_P[0] = 0;
@@ -756,9 +763,9 @@ void TSNE<NDims>::symmetrizeMatrix(unsigned int** _row_P, unsigned int** _col_P,
     for(int i = 0; i < no_elem; i++) sym_val_P[i] /= 2.0;
     
     // Return symmetrized matrices
-    free(*_row_P); *_row_P = sym_row_P;
-    free(*_col_P); *_col_P = sym_col_P;
-    free(*_val_P); *_val_P = sym_val_P;
+    row_P.swap(sym_row_P);
+    col_P.swap(sym_col_P);
+    val_P.swap(sym_val_P);
     
     // Free up some memery
     free(offset); offset = NULL;
