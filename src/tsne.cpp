@@ -240,6 +240,7 @@ void TSNE<NDims>::computeGradient(double* P, unsigned int* inp_row_P, unsigned i
     if(pos_f == NULL || neg_f == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     tree->computeEdgeForces(inp_row_P, inp_col_P, inp_val_P, N, pos_f);
 
+    // Storing the output to sum in single-threaded mode; avoid randomness in rounding errors.
     std::vector<double> output(N);
 
     #pragma omp parallel for schedule(guided)
