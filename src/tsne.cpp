@@ -235,15 +235,22 @@ void TSNE<NDims>::computeGradient(double* P, unsigned int* inp_row_P, unsigned i
     SPTree<NDims>* tree = new SPTree<NDims>(Y, N);
 
     // Compute all terms required for t-SNE gradient
-    double sum_Q = .0;
     double* pos_f = (double*) calloc(N * D, sizeof(double));
     double* neg_f = (double*) calloc(N * D, sizeof(double));
     if(pos_f == NULL || neg_f == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     tree->computeEdgeForces(inp_row_P, inp_col_P, inp_val_P, N, pos_f);
-    
-    #pragma omp parallel for schedule(guided) reduction(+:sum_Q)
+
+    // Storing the output to sum in single-threaded mode; avoid randomness in rounding errors.
+    std::vector<double> output(N);
+
+    #pragma omp parallel for schedule(guided)
     for (int n = 0; n < N; n++) {
-      sum_Q += tree->computeNonEdgeForces(n, theta, neg_f + n * D);
+      output[n]=tree->computeNonEdgeForces(n, theta, neg_f + n * D);
+    }
+
+    double sum_Q = .0;
+    for (int n=0; n<N; ++n) {
+        sum_Q += output[n];
     }
 
     // Compute final t-SNE gradient
