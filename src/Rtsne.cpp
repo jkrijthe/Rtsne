@@ -54,15 +54,15 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims, double perplexity,
       Rcpp::stop("Only 1, 2 or 3 dimensional output is suppported.\n");
     }
 
-    return save_results(N, no_dims, Y, costs, itercosts,
-        theta, perplexity, D, stop_lying_iter, mom_switch_iter, 
-        momentum, final_momentum, eta, exaggeration_factor);
+    return Rcpp::List::create(Rcpp::_["Y"]=Rcpp::NumericMatrix(no_dims, N, Y.data()), 
+            Rcpp::_["costs"]=Rcpp::NumericVector(costs.begin(), costs.end()),
+            Rcpp::_["itercosts"]=Rcpp::NumericVector(itercosts.begin(), itercosts.end()));
 }
 
 // Function that runs the Barnes-Hut implementation of t-SNE on nearest neighbor results.
 // [[Rcpp::export]]
 Rcpp::List Rtsne_nn_cpp(IntegerMatrix nn_dex, NumericMatrix nn_dist, 
-                     int origD, int no_dims, double perplexity, 
+                     int no_dims, double perplexity, 
                      double theta, bool verbose, int max_iter, 
                      NumericMatrix Y_in, bool init, 
                      int stop_lying_iter, int mom_switch_iter,
@@ -100,37 +100,8 @@ Rcpp::List Rtsne_nn_cpp(IntegerMatrix nn_dex, NumericMatrix nn_dist,
       Rcpp::stop("Only 1, 2 or 3 dimensional output is suppported.\n");
     }
 
-    return save_results(N, no_dims, Y, costs, itercosts,
-        theta, perplexity, origD, stop_lying_iter, mom_switch_iter, 
-        momentum, final_momentum, eta, exaggeration_factor);
+    return Rcpp::List::create(Rcpp::_["Y"]=Rcpp::NumericMatrix(no_dims, N, Y.data()), 
+            Rcpp::_["costs"]=Rcpp::NumericVector(costs.begin(), costs.end()),
+            Rcpp::_["itercosts"]=Rcpp::NumericVector(itercosts.begin(), itercosts.end()));
 }
 
-Rcpp::List save_results(int N, int no_dims, const std::vector<double>& Y, const std::vector<double>& costs, const std::vector<double>& itercosts,
-        double theta, double perplexity, int D, int stop_lying_iter, int mom_switch_iter, 
-        double momentum, double final_momentum, double eta, double exaggeration_factor) {
-
-  	// Save the results
-    Rcpp::NumericMatrix Yr(N, no_dims);
-    for (int i = 0; i < N; i++){
-        for (int j = 0; j < no_dims; j++){
-            Yr(i,j) = Y[i*no_dims+j];
-        }
-    }
-    Rcpp::NumericVector costsr(costs.begin(), costs.end());
-    Rcpp::NumericVector itercostsr(itercosts.begin(), itercosts.end());
-    
-    Rcpp::List output = Rcpp::List::create(Rcpp::_["theta"]=theta, 
-                                           Rcpp::_["perplexity"]=perplexity, 
-                                           Rcpp::_["N"]=N,
-                                           Rcpp::_["origD"]=D,
-                                           Rcpp::_["Y"]=Yr, 
-                                           Rcpp::_["costs"]=costsr, 
-                                           Rcpp::_["itercosts"]=itercostsr,
-                                           Rcpp::_["stop_lying_iter"]=stop_lying_iter, 
-                                           Rcpp::_["mom_switch_iter"]=mom_switch_iter, 
-                                           Rcpp::_["momentum"]=momentum, 
-                                           Rcpp::_["final_momentum"]=final_momentum, 
-                                           Rcpp::_["eta"]=eta, 
-                                           Rcpp::_["exaggeration_factor"]=exaggeration_factor);
-    return output; 
-}

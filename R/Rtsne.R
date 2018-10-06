@@ -16,6 +16,8 @@
 #' If \code{X} is a data.frame, it is transformed into a matrix using \code{\link{model.matrix}}. If \code{X} is a \code{\link{dist}} object, it is currently first expanded into a full distance matrix.
 #' 
 #' @param X matrix; Data matrix (each row is an observation, each column is a variable)
+#' @param index integer matrix; Each row contains the identity of the nearest neighbors for each observation 
+#' @param distance numeric matrix; Each row contains the distance to the nearest neighbors in \code{index} for each observation
 #' @param dims integer; Output dimensionality (default: 2)
 #' @param initial_dims integer; the number of dimensions that should be retained in the initial PCA step (default: 50)
 #' @param perplexity numeric; Perplexity parameter (should not be bigger than 3 * perplexity < nrow(X) - 1, see details for interpretation)
@@ -81,6 +83,33 @@ Rtsne <- function (X, ...) {
   UseMethod("Rtsne", X)
 }
 
+.check_tsne_params <- function(nsamples, dims, perplexity, theta, max_iter, verbose, Y_init, stop_lying_iter, mom_switch_iter, exaggeration_factor) 
+# Checks parameters for the t-SNE algorithm that are independent of 
+# the format of the input data (e.g., distance matrix or neighbors).
+{
+	is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
+
+    if (!is.wholenumber(dims) || dims < 1 || dims > 3) { stop("dims should be either 1, 2 or 3") }
+    if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("theta should lie in [0, 1]")}      
+    if (nsamples - 1 < 3 * perplexity) { stop("perplexity is too large for the number of samples")}
+    if (!(max_iter>0)) { stop("number of iterations should be positive")}
+    if (!is.null(Y_init) & (nrow(X)!=nrow(Y_init) || ncol(Y_init)!=dims)) { stop("incorrect format for Y_init") }
+    if (!is.wholenumber(stop_lying_iter) || stop_lying_iter<0) { stop("stop_lying_iter should be a positive integer")}
+    if (!is.wholenumber(mom_switch_iter) || mom_switch_iter<0) { stop("mom_switch_iter should be a positive integer")}
+    if (!is.numeric(exaggeration_factor)) { stop("exaggeration_factor should be numeric")}
+
+    if (is.null(Y_init)) {
+        init <- FALSE
+        Y_init <- matrix()
+    } else {
+        init <- TRUE
+    }
+
+    list(no_dims=dims, perplexity=perplexity, theta=theta, max_iter=max_iter, verbose=verbose, 
+        stop_lying_iter=stop_lying_iter, mom_switch_iter=mom_switch_iter, 
+        exaggeration_factor=exaggeration_factor, init=init, Y_init=Y_init)
+}
+
 #' @describeIn Rtsne Default Interface
 #' @export
 Rtsne.default <- function(X, dims=2, initial_dims=50, 
@@ -94,22 +123,14 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
                           momentum=0.5, final_momentum=0.8,
                           eta=200.0, exaggeration_factor=12.0, num_threads=1, ...) {
   
-  is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
-  
   if (!is.logical(is_distance)) { stop("is_distance should be a logical variable")}
-  if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("Incorrect theta.")}
-  if (nrow(X) - 1 < 3 * perplexity) { stop("Perplexity is too large.")}
   if (!is.matrix(X)) { stop("Input X is not a matrix")}
-  if (!(max_iter>0)) { stop("Incorrect number of iterations.")}
   if (is_distance & !(is.matrix(X) & (nrow(X)==ncol(X)))) { stop("Input is not an accepted distance matrix") }
-  if (!is.null(Y_init) & (nrow(X)!=nrow(Y_init) || ncol(Y_init)!=dims)) { stop("Incorrect format for Y_init.") }
   if (!(is.logical(pca_center) && is.logical(pca_scale)) ) { stop("pca_center and pca_scale should be TRUE or FALSE")}
-  if (!is.wholenumber(stop_lying_iter) || stop_lying_iter<0) { stop("stop_lying_iter should be a positive integer")}
-  if (!is.wholenumber(mom_switch_iter) || mom_switch_iter<0) { stop("mom_switch_iter should be a positive integer")}
-  if (!is.numeric(exaggeration_factor)) { stop("exaggeration_factor should be numeric")}
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
-  
-  
+  tsne.args <- .check_tsne_inputs(nrow(X), dims=dims, perplexity=perplexity, theta=theta, max_iter=max_iter, verbose=verbose, 
+        Y_init=Y_init, stop_lying_iter=stop_lying_iter, mom_switch_iter=mom_switch_iter, exaggeration_factor=exaggeration_factor)
+ 
   # Check for missing values
   X <- na.fail(X)
   
@@ -127,20 +148,20 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   if (check_duplicates & !is_distance){
     if (any(duplicated(X))) { stop("Remove duplicates before running TSNE.") }
   }  
+
   # Compute Squared distance if we are using exact TSNE
   if (is_distance & theta==0.0) {
     X <- X^2
   }
-  
-  if (is.null(Y_init)) {
-    init <- FALSE
-    Y_init <- matrix()
-  } else {
-    init <- TRUE
-  }
-  
-  Rtsne_cpp(X, dims, perplexity, theta,verbose, max_iter, is_distance, Y_init, init,
-            stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads)
+ 
+  out <- do.call(Rtsne_cpp, c(list(X=X, is_distance=is_distance, num_threads=num_threads), tsne.args))
+  out$Y <- t(out$Y) # Transposing here for greater efficiency.
+  tsne.args$Y_init <- NULL # Removing unnecessary fields for output.
+  tsne.args$no_dims <- NULL
+  info <- list(N=nrow(X))
+  if (!is_distance) { out$origD <- ncol(X) } # 'origD' is unknown for distance matrices.
+
+  c(info, out, tsne.args)
 }
 
 #' @describeIn Rtsne tsne on given dist object
