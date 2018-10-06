@@ -5,7 +5,7 @@ Rtsne_cpp <- function(X, no_dims, perplexity, theta, verbose, max_iter, distance
     .Call(`_Rtsne_Rtsne_cpp`, X, no_dims, perplexity, theta, verbose, max_iter, distance_precomputed, Y_in, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads)
 }
 
-Rtsne_nn_cpp <- function(nn_dex, nn_dist, origD, no_dims, perplexity, theta, verbose, max_iter, Y_in, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads) {
-    .Call(`_Rtsne_Rtsne_nn_cpp`, nn_dex, nn_dist, origD, no_dims, perplexity, theta, verbose, max_iter, Y_in, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads)
+Rtsne_nn_cpp <- function(nn_dex, nn_dist, no_dims, perplexity, theta, verbose, max_iter, Y_in, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads) {
+    .Call(`_Rtsne_Rtsne_nn_cpp`, nn_dex, nn_dist, no_dims, perplexity, theta, verbose, max_iter, Y_in, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads)
 }
 

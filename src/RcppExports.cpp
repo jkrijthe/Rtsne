@@ -32,14 +32,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // Rtsne_nn_cpp
-Rcpp::List Rtsne_nn_cpp(IntegerMatrix nn_dex, NumericMatrix nn_dist, int origD, int no_dims, double perplexity, double theta, bool verbose, int max_iter, NumericMatrix Y_in, bool init, int stop_lying_iter, int mom_switch_iter, double momentum, double final_momentum, double eta, double exaggeration_factor, unsigned int num_threads);
-RcppExport SEXP _Rtsne_Rtsne_nn_cpp(SEXP nn_dexSEXP, SEXP nn_distSEXP, SEXP origDSEXP, SEXP no_dimsSEXP, SEXP perplexitySEXP, SEXP thetaSEXP, SEXP verboseSEXP, SEXP max_iterSEXP, SEXP Y_inSEXP, SEXP initSEXP, SEXP stop_lying_iterSEXP, SEXP mom_switch_iterSEXP, SEXP momentumSEXP, SEXP final_momentumSEXP, SEXP etaSEXP, SEXP exaggeration_factorSEXP, SEXP num_threadsSEXP) {
+Rcpp::List Rtsne_nn_cpp(IntegerMatrix nn_dex, NumericMatrix nn_dist, int no_dims, double perplexity, double theta, bool verbose, int max_iter, NumericMatrix Y_in, bool init, int stop_lying_iter, int mom_switch_iter, double momentum, double final_momentum, double eta, double exaggeration_factor, unsigned int num_threads);
+RcppExport SEXP _Rtsne_Rtsne_nn_cpp(SEXP nn_dexSEXP, SEXP nn_distSEXP, SEXP no_dimsSEXP, SEXP perplexitySEXP, SEXP thetaSEXP, SEXP verboseSEXP, SEXP max_iterSEXP, SEXP Y_inSEXP, SEXP initSEXP, SEXP stop_lying_iterSEXP, SEXP mom_switch_iterSEXP, SEXP momentumSEXP, SEXP final_momentumSEXP, SEXP etaSEXP, SEXP exaggeration_factorSEXP, SEXP num_threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerMatrix >::type nn_dex(nn_dexSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type nn_dist(nn_distSEXP);
-    Rcpp::traits::input_parameter< int >::type origD(origDSEXP);
     Rcpp::traits::input_parameter< int >::type no_dims(no_dimsSEXP);
     Rcpp::traits::input_parameter< double >::type perplexity(perplexitySEXP);
     Rcpp::traits::input_parameter< double >::type theta(thetaSEXP);
@@ -54,14 +53,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type eta(etaSEXP);
     Rcpp::traits::input_parameter< double >::type exaggeration_factor(exaggeration_factorSEXP);
     Rcpp::traits::input_parameter< unsigned int >::type num_threads(num_threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(Rtsne_nn_cpp(nn_dex, nn_dist, origD, no_dims, perplexity, theta, verbose, max_iter, Y_in, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads));
+    rcpp_result_gen = Rcpp::wrap(Rtsne_nn_cpp(nn_dex, nn_dist, no_dims, perplexity, theta, verbose, max_iter, Y_in, init, stop_lying_iter, mom_switch_iter, momentum, final_momentum, eta, exaggeration_factor, num_threads));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_Rtsne_Rtsne_cpp", (DL_FUNC) &_Rtsne_Rtsne_cpp, 16},
-    {"_Rtsne_Rtsne_nn_cpp", (DL_FUNC) &_Rtsne_Rtsne_nn_cpp, 17},
+    {"_Rtsne_Rtsne_nn_cpp", (DL_FUNC) &_Rtsne_Rtsne_nn_cpp, 16},
     {NULL, NULL, 0}
 };
 
