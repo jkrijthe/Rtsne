@@ -8,16 +8,19 @@ Rtsne_neighbors <- function(index, distance, dims=2, perplexity=30, theta=0.5,
         momentum=0.5, final_momentum=0.8,
         eta=200.0, exaggeration_factor=12.0, num_threads=1, ...) {
     
-    if (!is.matrix(index)) { stop("Input index is not a matrix")}
+    if (!is.matrix(index)) { stop("Input index is not a matrix") }
     if (!identical(dim(index), dim(distance))) { stop("index and distance matrices should have the same dimensions") }
-    tsne.args <- .check_tsne_inputs(nrow(index), dims=dims, perplexity=perplexity, theta=theta, max_iter=max_iter, verbose=verbose, 
-            Y_init=Y_init, stop_lying_iter=stop_lying_iter, mom_switch_iter=mom_switch_iter, exaggeration_factor=exaggeration_factor)
+    R <- range(index)
+    if (any(R < 1 | R > nrow(index) | !is.finite(R))) { stop("invalid indices") }
+    tsne.args <- .check_tsne_params(nrow(index), dims=dims, perplexity=perplexity, theta=theta, max_iter=max_iter, verbose=verbose, 
+            Y_init=Y_init, stop_lying_iter=stop_lying_iter, mom_switch_iter=mom_switch_iter, 
+            momentum=momentum, final_momentum=final_momentum, eta=eta, exaggeration_factor=exaggeration_factor)
    
     # Transposing is necessary for fast column-major access to each sample, -1 for zero-indexing.
-    out <- do.call(Rtsne_nn_cpp, c(list(t(index - 1L), t(distance)), tsne.args))
+    out <- do.call(Rtsne_nn_cpp, c(list(nn_dex=t(index - 1L), nn_dist=t(distance), num_threads=num_threads), tsne.args))
     out$Y <- t(out$Y) # Transposing here for greater efficiency.
     tsne.args$Y_init <- NULL # Removing unnecessary fields for output.
     tsne.args$no_dims <- NULL
-    info <- list(N=nrow(X))
+    info <- list(N=nrow(index))
     c(info, out, tsne.args)
 }
