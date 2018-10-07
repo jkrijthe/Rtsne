@@ -44,7 +44,7 @@
 #' @return List with the following elements:
 #' \item{Y}{Matrix containing the new representations for the objects}
 #' \item{N}{Number of objects}
-#' \item{origD}{Original Dimensionality before TSNE}
+#' \item{origD}{Original Dimensionality before TSNE (only when \code{X} is a data matrix)}
 #' \item{perplexity}{See above}
 #' \item{theta}{See above}
 #' \item{costs}{The cost for every object after the final iteration}
@@ -56,6 +56,18 @@
 #' \item{eta}{Learning rate}
 #' \item{exaggeration_factor}{Exaggeration factor used to multiply the P matrix in the first part of the optimization}
 #' 
+#' @section Supplying precomputed distances:
+#' If a distance matrix is already available, this can be directly supplied to \code{Rtsne}.
+#' This avoids wasting time in recomputing distances but requires some work to get the same results as \code{Rtsne} on a data matrix.
+#' Specifically, Euclidean distances should be computed from a normalized data matrix - see \code{\link{normalize_input}} for details.
+#' 
+#' The same principle applies to nearest neighbor (NN) search results, which should also be based on the normalized data matrix.
+#' NN search results can be directly supplied to \code{Rtsne_neighbors} to avoid repeating a (possibly time-consuming) search.
+#' Note that pre-supplied NN results cannot be used when \code{theta=0} as they are only relevant for the approximate algorithm.
+#' 
+#' Any kind of distance metric can be used as input.
+#' In contrast, running \code{Rtsne} on a data matrix will always use Euclidean distances.
+#'
 #' @references Maaten, L. Van Der, 2014. Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research, 15, p.3221-3245.
 #' @references van der Maaten, L.J.P. & Hinton, G.E., 2008. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research, 9, pp.2579-2605.
 #' 

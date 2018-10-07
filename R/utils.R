@@ -10,6 +10,8 @@
 #' Directly computing distances on this scale may lead to underflow when computing the probabilities in the t-SNE algorithm.
 #' Rescaling the input values mitigates these problems to some extent.
 #'
+#' @return A numeric matrix of the same dimensions as \code{X} but centred by column and scaled to have a maximum deviation of 1.
+#' 
 #' @author
 #' Aaron Lun
 #'
