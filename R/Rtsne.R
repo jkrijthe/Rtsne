@@ -84,42 +84,6 @@ Rtsne <- function (X, ...) {
   UseMethod("Rtsne", X)
 }
 
-is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
-
-.check_tsne_params <- function(nsamples, dims, perplexity, theta, max_iter, verbose, Y_init, stop_lying_iter, mom_switch_iter, 
-    momentum, final_momentum, eta, exaggeration_factor) 
-# Checks parameters for the t-SNE algorithm that are independent of 
-# the format of the input data (e.g., distance matrix or neighbors).
-{
-    if (!is.wholenumber(dims) || dims < 1 || dims > 3) { stop("dims should be either 1, 2 or 3") }
-    if (!is.wholenumber(max_iter) || !(max_iter>0)) { stop("number of iterations should be a positive integer")}
-    if (!is.null(Y_init) && (nsamples!=nrow(Y_init) || ncol(Y_init)!=dims)) { stop("incorrect format for Y_init") }
-
-    if (!is.numeric(perplexity) || perplexity <= 0) { stop("perplexity should be a positive number") }
-    if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("theta should lie in [0, 1]")}      
-    if (!is.wholenumber(stop_lying_iter) || stop_lying_iter<0) { stop("stop_lying_iter should be a positive integer")}
-    if (!is.wholenumber(mom_switch_iter) || mom_switch_iter<0) { stop("mom_switch_iter should be a positive integer")}
-    if (!is.numeric(momentum) || momentum <= 0) { stop("momentum should be a positive number") }
-    if (!is.numeric(final_momentum) || final_momentum <= 0) { stop("final momentum should be a positive number") }
-    if (!is.numeric(eta) || eta <= 0) { stop("eta should be a positive number") }
-    if (!is.numeric(exaggeration_factor) || exaggeration_factor <= 0) { stop("exaggeration_factor should be a positive number")}
-    
-    if (nsamples - 1 < 3 * perplexity) { stop("perplexity is too large for the number of samples")}
-
-    init <- !is.null(Y_init)
-    if (init) {
-        Y_init <- t(Y_init) # transposing for rapid column-major access.
-    } else {
-        Y_init <- matrix()
-    }
-
-    list(no_dims=dims, perplexity=perplexity, theta=theta, max_iter=max_iter, verbose=verbose, 
-        init=init, Y_in=Y_init,
-        stop_lying_iter=stop_lying_iter, mom_switch_iter=mom_switch_iter, 
-        momentum=momentum, final_momentum=final_momentum,
-        eta=eta, exaggeration_factor=exaggeration_factor)
-}
-
 #' @describeIn Rtsne Default Interface
 #' @export
 Rtsne.default <- function(X, dims=2, initial_dims=50, 
@@ -173,12 +137,9 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
  
   out <- do.call(Rtsne_cpp, c(list(X=X, distance_precomputed=is_distance, num_threads=num_threads), tsne.args))
   out$Y <- t(out$Y) # Transposing here for greater efficiency.
-  tsne.args$Y_init <- NULL # Removing unnecessary fields for output.
-  tsne.args$no_dims <- NULL
-  info <- list(N=nrow(X))
-  if (!is_distance) { out$origD <- ncol(X) } # 'origD' is unknown for distance matrices.
-
-  c(info, out, tsne.args)
+  info <- list(N=ncol(X))
+  if (!is_distance) { out$origD <- nrow(X) } # 'origD' is unknown for distance matrices.
+  c(info, out, .clear_unwanted_params(tsne.args))
 }
 
 #' @describeIn Rtsne tsne on given dist object
