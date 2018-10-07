@@ -32,6 +32,7 @@
 #' @param Y_init matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with exaggerated perplexity values and a larger momentum term will be skipped.
 #' @param pca_center logical; Should data be centered before pca is applied? (default: TRUE)
 #' @param pca_scale logical; Should data be scaled before pca is applied? (default: FALSE)
+#' @param normalize logical; Should data be normalized prior to distance calculations with \code{\link{normalize_input}}? (default: TRUE)
 #' @param stop_lying_iter integer; Iteration after which the perplexities are no longer exaggerated (default: 250, except when Y_init is used, then 0)
 #' @param mom_switch_iter integer; Iteration after which the final momentum is used (default: 250, except when Y_init is used, then 0) 
 #' @param momentum numeric; Momentum used in the first part of the optimization (default: 0.5)
@@ -126,7 +127,7 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
                           check_duplicates=TRUE, 
                           pca=TRUE, partial_pca=FALSE, max_iter=1000,verbose=getOption("verbose", FALSE), 
                           is_distance=FALSE, Y_init=NULL, 
-                          pca_center=TRUE, pca_scale=FALSE,
+                          pca_center=TRUE, pca_scale=FALSE, normalize=TRUE,
                           stop_lying_iter=ifelse(is.null(Y_init),250L,0L), 
                           mom_switch_iter=ifelse(is.null(Y_init),250L,0L), 
                           momentum=0.5, final_momentum=0.8,
@@ -158,6 +159,9 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
     }
     if (check_duplicates) {
       if (any(duplicated(X))) { stop("Remove duplicates before running TSNE.") }
+    }
+    if (normalize) {
+      X <- normalize_input(X)
     }
     X <- t(X) # transposing for rapid column-major access.
   } else {

@@ -88,15 +88,6 @@ void TSNE<NDims>::run(double* X, int N, int D, double* Y, bool distance_precompu
     // Normalize input data (to prevent numerical problems)
     if (verbose) Rprintf("Computing input similarities...\n");
     clock_t start = clock();
-    if (!distance_precomputed) {
-      if (verbose) Rprintf("Normalizing input...\n");
-      zeroMean(X, N, D);
-      double max_X = .0;
-      for(int i = 0; i < N * D; i++) {
-        if(fabs(X[i]) > max_X) max_X = fabs(X[i]);
-      }
-      for(int i = 0; i < N * D; i++) X[i] /= max_X;
-    }
     
     // Compute input similarities for exact t-SNE
     if(exact) {
