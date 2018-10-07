@@ -32,7 +32,7 @@
 #' @param Y_init matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with exaggerated perplexity values and a larger momentum term will be skipped.
 #' @param pca_center logical; Should data be centered before pca is applied? (default: TRUE)
 #' @param pca_scale logical; Should data be scaled before pca is applied? (default: FALSE)
-#' @param normalize logical; Should data be normalized prior to distance calculations with \code{\link{normalize_input}}? (default: TRUE)
+#' @param normalize logical; Should data be normalized internally prior to distance calculations with \code{\link{normalize_input}}? (default: TRUE)
 #' @param stop_lying_iter integer; Iteration after which the perplexities are no longer exaggerated (default: 250, except when Y_init is used, then 0)
 #' @param mom_switch_iter integer; Iteration after which the final momentum is used (default: 250, except when Y_init is used, then 0) 
 #' @param momentum numeric; Momentum used in the first part of the optimization (default: 0.5)
@@ -57,12 +57,14 @@
 #' \item{exaggeration_factor}{Exaggeration factor used to multiply the P matrix in the first part of the optimization}
 #' 
 #' @section Supplying precomputed distances:
-#' If a distance matrix is already available, this can be directly supplied to \code{Rtsne}.
-#' This avoids wasting time in recomputing distances but requires some work to get the same results as \code{Rtsne} on a data matrix.
+#' If a distance matrix is already available, this can be directly supplied to \code{Rtsne} by setting \code{is_distance=TRUE}.
+#' This improves efficiency by avoiding recalculation of distances, but requires some work to get the same results as running default \code{Rtsne} on a data matrix.
 #' Specifically, Euclidean distances should be computed from a normalized data matrix - see \code{\link{normalize_input}} for details.
+#' PCA arguments will also be ignored if \code{is_distance=TRUE}.
 #' 
-#' The same principle applies to nearest neighbor (NN) search results, which should also be based on the normalized data matrix.
-#' NN search results can be directly supplied to \code{Rtsne_neighbors} to avoid repeating a (possibly time-consuming) search.
+#' NN search results can be directly supplied to \code{Rtsne_neighbors} to avoid repeating the (possibly time-consuming) search.
+#' To achieve the same results as \code{Rtsne} on the data matrix, the search should be conducted on the normalized data matrix.
+#' The number of nearest neighbors should also be equal to three-fold the \code{perplexity}, rounded down to the nearest integer.
 #' Note that pre-supplied NN results cannot be used when \code{theta=0} as they are only relevant for the approximate algorithm.
 #' 
 #' Any kind of distance metric can be used as input.
