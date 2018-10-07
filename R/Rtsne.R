@@ -110,6 +110,7 @@ is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) 
         Y_init <- matrix()
     } else {
         init <- TRUE
+        Y_init <- t(Y_init) # transposing for rapid column-major access.
     }
 
     list(no_dims=dims, perplexity=perplexity, theta=theta, max_iter=max_iter, verbose=verbose, 
@@ -145,23 +146,26 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   X <- na.fail(X)
   
   # Apply PCA
-  if (pca & !is_distance) {
-    if(verbose) cat("Performing PCA\n")
-    if(partial_pca){
-      if (!requireNamespace("irlba", quietly = TRUE)) {stop("Package \"irlba\" is required for partial PCA. Please install it.", call. = FALSE)}
-      X <- irlba::prcomp_irlba(X, n = initial_dims, center = pca_center, scale = pca_scale)$x
-    }else{
-      if(verbose & min(dim(X))>2500) cat("Consider setting partial_pca=TRUE for large matrices\n")
-      X <- prcomp(X, retx=TRUE, center = pca_center, scale. = pca_scale, rank. = initial_dims)$x
+  if (!is_distance) { 
+    if (pca) {
+      if(verbose) cat("Performing PCA\n")
+      if(partial_pca){
+        if (!requireNamespace("irlba", quietly = TRUE)) {stop("Package \"irlba\" is required for partial PCA. Please install it.", call. = FALSE)}
+        X <- irlba::prcomp_irlba(X, n = initial_dims, center = pca_center, scale = pca_scale)$x
+      }else{
+        if(verbose & min(dim(X))>2500) cat("Consider setting partial_pca=TRUE for large matrices\n")
+        X <- prcomp(X, retx=TRUE, center = pca_center, scale. = pca_scale, rank. = initial_dims)$x
+      }
     }
-  }
-  if (check_duplicates & !is_distance){
-    if (any(duplicated(X))) { stop("Remove duplicates before running TSNE.") }
-  }  
-
-  # Compute Squared distance if we are using exact TSNE
-  if (is_distance & theta==0.0) {
-    X <- X^2
+    if (check_duplicates) {
+      if (any(duplicated(X))) { stop("Remove duplicates before running TSNE.") }
+    }
+    X <- t(X) # transposing for rapid column-major access.
+  } else {
+    # Compute Squared distance if we are using exact TSNE
+    if (theta==0.0) {
+      X <- X^2
+    }
   }
  
   out <- do.call(Rtsne_cpp, c(list(X=X, distance_precomputed=is_distance, num_threads=num_threads), tsne.args))

@@ -15,25 +15,15 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims, double perplexity,
                      double momentum, double final_momentum, 
                      double eta, double exaggeration_factor, unsigned int num_threads) {
 
-    size_t origN = X.nrow(), D = X.ncol();
-    std::vector<double> data(D * origN);
-    for (unsigned long i = 0; i < origN; i++){
-        for (unsigned long j = 0; j < D; j++){
-            data[i*D+j] = X(i,j);
-        }
-    }
+    size_t N = X.nrow(), D = X.ncol();
+    double * data=X.begin();
     
-    size_t N = origN;
     if (verbose) Rprintf("Read the %i x %i data matrix successfully!\n", N, D);
     std::vector<double> Y(N * no_dims), costs(N), itercosts(static_cast<int>(std::ceil(max_iter/50.0)));
   
     // Providing user-supplied solution.
     if (init) {
-        for (int i = 0; i < N; i++){
-            for (int j = 0; j < no_dims; j++){
-                Y[i*no_dims+j] = Y_in(i,j);
-            }
-        }
+        for (size_t i = 0; i < Y.size(); i++) Y[i] = Y_in[i];
         if (verbose) Rprintf("Using user supplied starting positions\n");
     }
     
@@ -41,15 +31,15 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims, double perplexity,
     if (no_dims==1) {
       TSNE<1> tsne(perplexity, theta, verbose, max_iter, init, stop_lying_iter, mom_switch_iter, 
               momentum, final_momentum, eta, exaggeration_factor, num_threads);
-      tsne.run(data.data(), N, D, Y.data(), distance_precomputed, costs.data(), itercosts.data());
+      tsne.run(data, N, D, Y.data(), distance_precomputed, costs.data(), itercosts.data());
     } else if (no_dims==2) {
       TSNE<2> tsne(perplexity, theta, verbose, max_iter, init, stop_lying_iter, mom_switch_iter, 
               momentum, final_momentum, eta, exaggeration_factor, num_threads);
-      tsne.run(data.data(), N, D, Y.data(), distance_precomputed, costs.data(), itercosts.data());
+      tsne.run(data, N, D, Y.data(), distance_precomputed, costs.data(), itercosts.data());
     } else if (no_dims==3) {
       TSNE<3> tsne(perplexity, theta, verbose, max_iter, init, stop_lying_iter, mom_switch_iter, 
               momentum, final_momentum, eta, exaggeration_factor, num_threads);
-      tsne.run(data.data(), N, D, Y.data(), distance_precomputed, costs.data(), itercosts.data());
+      tsne.run(data, N, D, Y.data(), distance_precomputed, costs.data(), itercosts.data());
     } else {
       Rcpp::stop("Only 1, 2 or 3 dimensional output is suppported.\n");
     }
