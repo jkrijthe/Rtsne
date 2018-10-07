@@ -65,11 +65,7 @@ Rcpp::List Rtsne_nn_cpp(IntegerMatrix nn_dex, NumericMatrix nn_dist,
   
     // Providing user-supplied solution.
     if (init) {
-        for (int i = 0; i < N; i++){
-            for (int j = 0; j < no_dims; j++){
-                Y[i*no_dims+j] = Y_in(i,j);
-            }
-        }
+        for (size_t i = 0; i < Y.size(); i++) Y[i] = Y_in[i];
         if (verbose) Rprintf("Using user supplied starting positions\n");
     }
     
