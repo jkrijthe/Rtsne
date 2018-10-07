@@ -15,7 +15,7 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims, double perplexity,
                      double momentum, double final_momentum, 
                      double eta, double exaggeration_factor, unsigned int num_threads) {
 
-    size_t N = X.nrow(), D = X.ncol();
+    size_t N = X.ncol(), D = X.nrow();
     double * data=X.begin();
     
     if (verbose) Rprintf("Read the %i x %i data matrix successfully!\n", N, D);
