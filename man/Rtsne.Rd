@@ -15,10 +15,10 @@ Rtsne(X, ...)
   pca = TRUE, partial_pca = FALSE, max_iter = 1000,
   verbose = getOption("verbose", FALSE), is_distance = FALSE,
   Y_init = NULL, pca_center = TRUE, pca_scale = FALSE,
-  stop_lying_iter = ifelse(is.null(Y_init), 250L, 0L),
-  mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L), momentum = 0.5,
-  final_momentum = 0.8, eta = 200, exaggeration_factor = 12,
-  num_threads = 1, ...)
+  normalize = TRUE, stop_lying_iter = ifelse(is.null(Y_init), 250L,
+  0L), mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L),
+  momentum = 0.5, final_momentum = 0.8, eta = 200,
+  exaggeration_factor = 12, num_threads = 1, ...)
 
 \method{Rtsne}{dist}(X, ..., is_distance = TRUE)
 
@@ -61,6 +61,8 @@ Rtsne_neighbors(index, distance, dims = 2, perplexity = 30,
 \item{pca_center}{logical; Should data be centered before pca is applied? (default: TRUE)}
 
 \item{pca_scale}{logical; Should data be scaled before pca is applied? (default: FALSE)}
+
+\item{normalize}{logical; Should data be normalized prior to distance calculations with \code{\link{normalize_input}}? (default: TRUE)}
 
 \item{stop_lying_iter}{integer; Iteration after which the perplexities are no longer exaggerated (default: 250, except when Y_init is used, then 0)}
 
