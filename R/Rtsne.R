@@ -92,7 +92,7 @@ is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) 
 {
     if (!is.wholenumber(dims) || dims < 1 || dims > 3) { stop("dims should be either 1, 2 or 3") }
     if (!is.wholenumber(max_iter) || !(max_iter>0)) { stop("number of iterations should be a positive integer")}
-    if (!is.null(Y_init) & (nsamples!=nrow(Y_init) || ncol(Y_init)!=dims)) { stop("incorrect format for Y_init") }
+    if (!is.null(Y_init) && (nsamples!=nrow(Y_init) || ncol(Y_init)!=dims)) { stop("incorrect format for Y_init") }
 
     if (!is.numeric(perplexity) || perplexity <= 0) { stop("perplexity should be a positive number") }
     if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("theta should lie in [0, 1]")}      
@@ -105,12 +105,11 @@ is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) 
     
     if (nsamples - 1 < 3 * perplexity) { stop("perplexity is too large for the number of samples")}
 
-    if (is.null(Y_init)) {
-        init <- FALSE
-        Y_init <- matrix()
-    } else {
-        init <- TRUE
+    init <- !is.null(Y_init)
+    if (init) {
         Y_init <- t(Y_init) # transposing for rapid column-major access.
+    } else {
+        Y_init <- matrix()
     }
 
     list(no_dims=dims, perplexity=perplexity, theta=theta, max_iter=max_iter, verbose=verbose, 
