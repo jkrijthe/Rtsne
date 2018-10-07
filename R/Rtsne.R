@@ -148,7 +148,7 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   }
  
   out <- do.call(Rtsne_cpp, c(list(X=X, distance_precomputed=is_distance, num_threads=num_threads), tsne.args))
-  out$Y <- t(out$Y) # Transposing here for greater efficiency.
+  out$Y <- t(out$Y) # Transposing back.
   info <- list(N=ncol(X))
   if (!is_distance) { out$origD <- nrow(X) } # 'origD' is unknown for distance matrices.
   c(info, out, .clear_unwanted_params(tsne.args))
