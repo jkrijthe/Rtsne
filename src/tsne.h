@@ -73,7 +73,7 @@ private:
 
     // Member variables.
     double perplexity, theta, momentum, final_momentum, eta, exaggeration_factor;
-    int max_iter, mom_switch_iter, stop_lying_iter, num_threads;
+    int max_iter, stop_lying_iter, mom_switch_iter, num_threads;
     bool verbose, init, exact;
 
     std::vector<unsigned int> row_P, col_P;
