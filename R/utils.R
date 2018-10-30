@@ -47,8 +47,8 @@ is.wholenumber <- function(x, tol = .Machine$double.eps^0.5)
     if (!is.numeric(theta) || (theta<0.0) || (theta>1.0) ) { stop("theta should lie in [0, 1]")}
     if (!is.wholenumber(stop_lying_iter) || stop_lying_iter<0) { stop("stop_lying_iter should be a positive integer")}
     if (!is.wholenumber(mom_switch_iter) || mom_switch_iter<0) { stop("mom_switch_iter should be a positive integer")}
-    if (!is.numeric(momentum) || momentum <= 0) { stop("momentum should be a positive number") }
-    if (!is.numeric(final_momentum) || final_momentum <= 0) { stop("final momentum should be a positive number") }
+    if (!is.numeric(momentum) || momentum < 0) { stop("momentum should be a positive number") }
+    if (!is.numeric(final_momentum) || final_momentum < 0) { stop("final momentum should be a positive number") }
     if (!is.numeric(eta) || eta <= 0) { stop("eta should be a positive number") }
     if (!is.numeric(exaggeration_factor) || exaggeration_factor <= 0) { stop("exaggeration_factor should be a positive number")}
 
