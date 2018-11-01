@@ -1,7 +1,7 @@
 ---
 output:
-  md_document:
-    variant: markdown_github
+  github_document:
+    html_preview: false
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
@@ -41,12 +41,12 @@ library(Rtsne) # Load package
 iris_unique <- unique(iris) # Remove duplicates
 set.seed(42) # Sets seed for reproducibility
 tsne_out <- Rtsne(as.matrix(iris_unique[,1:4])) # Run TSNE
-plot(tsne_out$Y,col=iris_unique$Species) # Plot the result
+plot(tsne_out$Y,col=iris_unique$Species,asp=1) # Plot the result
 ```
 
 
 #Details
-This R package offers a wrapper around the Barnes-Hut TSNE C++ implementation of [2] [3]. Only minor changes were made to the original code to allow it to function as an R package.
+This R package offers a wrapper around the Barnes-Hut TSNE C++ implementation of [2] [3]. Changes were made to the original code to allow it to function as an R package and to add additional functionality and speed improvements.
 
 #References
 [1] L.J.P. van der Maaten and G.E. Hinton. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605, 2008.
