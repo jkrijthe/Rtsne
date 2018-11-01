@@ -46,30 +46,30 @@ public:
     TSNE(double perplexity, double theta, bool verbose, int max_iter, bool init, int stop_lying_iter, 
        int mom_switch_iter, double momentum, double final_momentum, double eta, double exaggeration_factor,int num_threads);
 
-    void run(double* X, int N, int D, double* Y, bool distance_precomputed, double* cost, double* itercost);
-    void run(const int* nn_index, const double* nn_dist, int N, int K, double* Y, double* cost, double* itercost);
+    void run(double* X, unsigned int N, int D, double* Y, bool distance_precomputed, double* cost, double* itercost);
+    void run(const int* nn_index, const double* nn_dist, unsigned int N, int K, double* Y, double* cost, double* itercost);
 
 private:
-    void symmetrizeMatrix(int N); 
-    void trainIterations(int N, double* Y, double* cost, double* itercost);
+    void symmetrizeMatrix(unsigned int N); 
+    void trainIterations(unsigned int N, double* Y, double* cost, double* itercost);
 
-    void computeGradient(double* P, unsigned int* inp_row_P, unsigned int* inp_col_P, double* inp_val_P, double* Y, int N, int D, double* dC, double theta);
-    void computeExactGradient(double* P, double* Y, int N, int D, double* dC);
-    double evaluateError(double* P, double* Y, int N, int D);
-    double evaluateError(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, int N, int D, double theta);
-    void getCost(double* P, double* Y, int N, int D, double* costs);
-    void getCost(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, int N, int D, double theta, double* costs);
-    void zeroMean(double* X, int N, int D);
+    void computeGradient(double* P, unsigned int* inp_row_P, unsigned int* inp_col_P, double* inp_val_P, double* Y, unsigned int N, int D, double* dC, double theta);
+    void computeExactGradient(double* P, double* Y, unsigned int N, int D, double* dC);
+    double evaluateError(double* P, double* Y, unsigned int N, int D);
+    double evaluateError(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, unsigned int N, int D, double theta);
+    void getCost(double* P, double* Y, unsigned int N, int D, double* costs);
+    void getCost(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, unsigned int N, int D, double theta, double* costs);
+    void zeroMean(double* X, unsigned int N, int D);
 
-    void computeGaussianPerplexity(double* X, int N, int D, bool distance_precomputed);
+    void computeGaussianPerplexity(double* X, unsigned int N, int D, bool distance_precomputed);
     template<double (*distance)( const DataPoint&, const DataPoint& )>
-    void computeGaussianPerplexity(double* X, int N, int D, int K);
-    void computeGaussianPerplexity(const int* nn_dex, const double* nn_dist, int N, int K);
-    void setupApproximateMemory(int N, int K);
+    void computeGaussianPerplexity(double* X, unsigned int N, int D, int K);
+    void computeGaussianPerplexity(const int* nn_dex, const double* nn_dist, unsigned int N, int K);
+    void setupApproximateMemory(unsigned int N, int K);
 
     void computeProbabilities(const double perplexity, const int K, const double* distances, double* cur_P);
-    void computeSquaredEuclideanDistance(double* X, int N, int D, double* DD);
-    void computeSquaredEuclideanDistanceDirect(double* X, int N, int D, double* DD);
+    void computeSquaredEuclideanDistance(double* X, unsigned  int N, int D, double* DD);
+    void computeSquaredEuclideanDistanceDirect(double* X, unsigned int N, int D, double* DD);
     
     double randn();
 

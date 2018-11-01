@@ -396,7 +396,7 @@ double SPTree<NDims>::computeNonEdgeForces(unsigned int point_index, double thet
 
 // Computes edge forces
 template<int NDims>
-void SPTree<NDims>::computeEdgeForces(unsigned int* row_P, unsigned int* col_P, double* val_P, int N, double* pos_f, int num_threads) const
+void SPTree<NDims>::computeEdgeForces(unsigned int* row_P, unsigned int* col_P, double* val_P, unsigned int N, double* pos_f, int num_threads) const
 {
   
   // Loop over all edges in the graph
@@ -436,7 +436,7 @@ void SPTree<NDims>::print()
 
   if(is_leaf) {
     Rprintf("Leaf node; data = [");
-    for(int i = 0; i < size; i++) {
+    for(unsigned int i = 0; i < size; i++) {
       double* point = data + index[i] * NDims;
       for(int d = 0; d < NDims; d++) Rprintf("%f, ", point[d]);
       Rprintf(" (index = %d)", index[i]);

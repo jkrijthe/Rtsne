@@ -101,7 +101,7 @@ public:
   void getAllIndices(unsigned int* indices);
   unsigned int getDepth();
   double computeNonEdgeForces(unsigned int point_index, double theta, double neg_f[]) const;
-  void computeEdgeForces(unsigned int* row_P, unsigned int* col_P, double* val_P, int N, double* pos_f, int num_threads) const;
+  void computeEdgeForces(unsigned int* row_P, unsigned int* col_P, double* val_P, unsigned int N, double* pos_f, int num_threads) const;
   void print();
   
 private:

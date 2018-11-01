@@ -77,7 +77,7 @@ TSNE<NDims>::TSNE(double Perplexity, double Theta, bool Verbose, int Max_iter, b
 
 // Perform t-SNE
 template <int NDims>
-void TSNE<NDims>::run(double* X, int N, int D, double* Y, bool distance_precomputed, double* cost, double* itercost) {
+void TSNE<NDims>::run(double* X, unsigned int N, int D, double* Y, bool distance_precomputed, double* cost, double* itercost) {
     if(N - 1 < 3 * perplexity) { Rcpp::stop("Perplexity too large for the number of data points!\n"); }
     if (verbose) Rprintf("Using no_dims = %d, perplexity = %f, and theta = %f\n", NDims, perplexity, theta);
     if (verbose) Rprintf("Computing input similarities...\n");
@@ -116,8 +116,8 @@ void TSNE<NDims>::run(double* X, int N, int D, double* Y, bool distance_precompu
         // Symmetrize input similarities
         symmetrizeMatrix(N);
         double sum_P = .0;
-        for(int i = 0; i < row_P[N]; i++) sum_P += val_P[i];
-        for(int i = 0; i < row_P[N]; i++) val_P[i] /= sum_P;
+        for(unsigned int i = 0; i < row_P[N]; i++) sum_P += val_P[i];
+        for(unsigned int i = 0; i < row_P[N]; i++) val_P[i] /= sum_P;
     }
 
     if (verbose) {
@@ -132,7 +132,7 @@ void TSNE<NDims>::run(double* X, int N, int D, double* Y, bool distance_precompu
 
 // Perform t-SNE with nearest neighbor results.
 template<int NDims>
-void TSNE<NDims>::run(const int* nn_index, const double* nn_dist, int N, int K, double* Y, double* cost, double* itercost) {
+void TSNE<NDims>::run(const int* nn_index, const double* nn_dist, unsigned int N, int K, double* Y, double* cost, double* itercost) {
     if(N - 1 < 3 * perplexity) { Rcpp::stop("Perplexity too large for the number of data points!\n"); }
     if (verbose) Rprintf("Using no_dims = %d, perplexity = %f, and theta = %f\n", NDims, perplexity, theta);
     if (verbose) Rprintf("Computing input similarities...\n");
@@ -144,8 +144,8 @@ void TSNE<NDims>::run(const int* nn_index, const double* nn_dist, int N, int K, 
     // Symmetrize input similarities
     symmetrizeMatrix(N);
     double sum_P = .0;
-    for(int i = 0; i < row_P[N]; i++) sum_P += val_P[i];
-    for(int i = 0; i < row_P[N]; i++) val_P[i] /= sum_P;
+    for(unsigned int i = 0; i < row_P[N]; i++) sum_P += val_P[i];
+    for(unsigned int i = 0; i < row_P[N]; i++) val_P[i] /= sum_P;
 
     if (verbose) {
         clock_t end = clock();
@@ -159,21 +159,21 @@ void TSNE<NDims>::run(const int* nn_index, const double* nn_dist, int N, int K, 
 
 // Perform main training loop
 template<int NDims>
-void TSNE<NDims>::trainIterations(int N, double* Y, double* cost, double* itercost) {
+void TSNE<NDims>::trainIterations(unsigned int N, double* Y, double* cost, double* itercost) {
     // Allocate some memory
     double* dY    = (double*) malloc(N * NDims * sizeof(double));
     double* uY    = (double*) malloc(N * NDims * sizeof(double));
     double* gains = (double*) malloc(N * NDims * sizeof(double));
     if(dY == NULL || uY == NULL || gains == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-    for(int i = 0; i < N * NDims; i++)    uY[i] =  .0;
-    for(int i = 0; i < N * NDims; i++) gains[i] = 1.0;
+    for(unsigned int i = 0; i < N * NDims; i++)    uY[i] =  .0;
+    for(unsigned int i = 0; i < N * NDims; i++) gains[i] = 1.0;
 
     // Lie about the P-values
-    if(exact) { for(unsigned long i = 0; i < (long)N * N; i++) P[i] *= exaggeration_factor; }
+    if(exact) { for(unsigned long i = 0; i < (unsigned long)N * N; i++) P[i] *= exaggeration_factor; }
     else {      for(unsigned long i = 0; i < row_P[N]; i++)    val_P[i] *= exaggeration_factor; }
 
 	// Initialize solution (randomly), if not already done
-	if (!init) { for(int i = 0; i < N * NDims; i++) Y[i] = randn() * .0001; }
+	if (!init) { for(unsigned int i = 0; i < N * NDims; i++) Y[i] = randn() * .0001; }
 
   clock_t start = clock(), end;
   float total_time=0;
@@ -183,8 +183,8 @@ void TSNE<NDims>::trainIterations(int N, double* Y, double* cost, double* iterco
 
         // Stop lying about the P-values after a while, and switch momentum
         if(iter == stop_lying_iter) {
-          if(exact) { for(unsigned long i = 0; i < (long)N * N; i++)        P[i] /= exaggeration_factor; }
-          else      { for(int i = 0; i < row_P[N]; i++) val_P[i] /= exaggeration_factor; }
+          if(exact) { for(unsigned long i = 0; i < (unsigned long)N * N; i++)        P[i] /= exaggeration_factor; }
+          else      { for(unsigned int i = 0; i < row_P[N]; i++) val_P[i] /= exaggeration_factor; }
         }
         if(iter == mom_switch_iter) momentum = final_momentum;
 
@@ -193,12 +193,12 @@ void TSNE<NDims>::trainIterations(int N, double* Y, double* cost, double* iterco
         else computeGradient(P.data(), row_P.data(), col_P.data(), val_P.data(), Y, N, NDims, dY, theta);
 
         // Update gains
-        for(int i = 0; i < N * NDims; i++) gains[i] = (sign_tsne(dY[i]) != sign_tsne(uY[i])) ? (gains[i] + .2) : (gains[i] * .8);
-        for(int i = 0; i < N * NDims; i++) if(gains[i] < .01) gains[i] = .01;
+        for(unsigned int i = 0; i < N * NDims; i++) gains[i] = (sign_tsne(dY[i]) != sign_tsne(uY[i])) ? (gains[i] + .2) : (gains[i] * .8);
+        for(unsigned int i = 0; i < N * NDims; i++) if(gains[i] < .01) gains[i] = .01;
 
         // Perform gradient update (with momentum and gains)
-        for(int i = 0; i < N * NDims; i++) uY[i] = momentum * uY[i] - eta * gains[i] * dY[i];
-        for(int i = 0; i < N * NDims; i++)  Y[i] = Y[i] + uY[i];
+        for(unsigned int i = 0; i < N * NDims; i++) uY[i] = momentum * uY[i] - eta * gains[i] * dY[i];
+        for(unsigned int i = 0; i < N * NDims; i++)  Y[i] = Y[i] + uY[i];
 
         // Make solution zero-mean
         zeroMean(Y, N, NDims);
@@ -236,7 +236,7 @@ void TSNE<NDims>::trainIterations(int N, double* Y, double* cost, double* iterco
 
 // Compute gradient of the t-SNE cost function (using Barnes-Hut algorithm)
 template <int NDims>
-void TSNE<NDims>::computeGradient(double* P, unsigned int* inp_row_P, unsigned int* inp_col_P, double* inp_val_P, double* Y, int N, int D, double* dC, double theta)
+void TSNE<NDims>::computeGradient(double* P, unsigned int* inp_row_P, unsigned int* inp_col_P, double* inp_val_P, double* Y, unsigned int N, int D, double* dC, double theta)
 {
     // Construct space-partitioning tree on current map
     SPTree<NDims>* tree = new SPTree<NDims>(Y, N);
@@ -251,17 +251,17 @@ void TSNE<NDims>::computeGradient(double* P, unsigned int* inp_row_P, unsigned i
     std::vector<double> output(N);
 
     #pragma omp parallel for schedule(guided) num_threads(num_threads)
-    for (int n = 0; n < N; n++) {
+    for (unsigned int n = 0; n < N; n++) {
       output[n]=tree->computeNonEdgeForces(n, theta, neg_f + n * D);
     }
 
     double sum_Q = .0;
-    for (int n=0; n<N; ++n) {
+    for (unsigned int n=0; n<N; ++n) {
         sum_Q += output[n];
     }
 
     // Compute final t-SNE gradient
-    for(int i = 0; i < N * D; i++) {
+    for(unsigned int i = 0; i < N * D; i++) {
         dC[i] = pos_f[i] - (neg_f[i] / sum_Q);
     }
 
@@ -272,18 +272,18 @@ void TSNE<NDims>::computeGradient(double* P, unsigned int* inp_row_P, unsigned i
 
 // Compute gradient of the t-SNE cost function (exact)
 template <int NDims>
-void TSNE<NDims>::computeExactGradient(double* P, double* Y, int N, int D, double* dC) {
+void TSNE<NDims>::computeExactGradient(double* P, double* Y, unsigned int N, int D, double* dC) {
 	
 	// Make sure the current gradient contains zeros
-	for(int i = 0; i < N * D; i++) dC[i] = 0.0;
+	for(unsigned int i = 0; i < N * D; i++) dC[i] = 0.0;
 
     // Compute the squared Euclidean distance matrix
-    double* DD = (double*) malloc((long)N * N * sizeof(double));
+    double* DD = (double*) malloc((unsigned long)N * N * sizeof(double));
     if(DD == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     computeSquaredEuclideanDistance(Y, N, D, DD);
 
     // Compute Q-matrix and normalization sum
-    double* Q    = (double*) malloc((long)N * N * sizeof(double));
+    double* Q    = (double*) malloc((unsigned long)N * N * sizeof(double));
     if(Q == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     double sum_Q = .0;
     for(unsigned long n = 0; n < N; n++) {
@@ -315,11 +315,11 @@ void TSNE<NDims>::computeExactGradient(double* P, double* Y, int N, int D, doubl
 
 // Evaluate t-SNE cost function (exactly)
 template <int NDims>
-double TSNE<NDims>::evaluateError(double* P, double* Y, int N, int D) {
+double TSNE<NDims>::evaluateError(double* P, double* Y, unsigned int N, int D) {
 
     // Compute the squared Euclidean distance matrix
-    double* DD = (double*) malloc((long)N * N * sizeof(double));
-    double* Q = (double*) malloc((long)N * N * sizeof(double));
+    double* DD = (double*) malloc((unsigned long)N * N * sizeof(double));
+    double* Q = (double*) malloc((unsigned long)N * N * sizeof(double));
     if(DD == NULL || Q == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
     computeSquaredEuclideanDistance(Y, N, D, DD);
 
@@ -334,7 +334,7 @@ double TSNE<NDims>::evaluateError(double* P, double* Y, int N, int D) {
             else Q[n * N + m] = DBL_MIN;
         }
     }
-    for(unsigned long i = 0; i < (long)N * N; i++) Q[i] /= sum_Q;
+    for(unsigned long i = 0; i < (unsigned long)N * N; i++) Q[i] /= sum_Q;
 
     // Sum t-SNE error
     double C = .0;
@@ -352,21 +352,21 @@ double TSNE<NDims>::evaluateError(double* P, double* Y, int N, int D) {
 
 // Evaluate t-SNE cost function (approximately)
 template <int NDims>
-double TSNE<NDims>::evaluateError(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, int N, int D, double theta)
+double TSNE<NDims>::evaluateError(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, unsigned int N, int D, double theta)
 {
 
     // Get estimate of normalization term
     SPTree<NDims>* tree = new SPTree<NDims>(Y, N);
     double* buff = (double*) calloc(D, sizeof(double));
     double sum_Q = .0;
-    for(int n = 0; n < N; n++) sum_Q += tree->computeNonEdgeForces(n, theta, buff);
+    for(unsigned int n = 0; n < N; n++) sum_Q += tree->computeNonEdgeForces(n, theta, buff);
 
     // Loop over all edges to compute t-SNE error
     int ind1, ind2;
     double C = .0, Q;
-    for(int n = 0; n < N; n++) {
+    for(unsigned int n = 0; n < N; n++) {
         ind1 = n * D;
-        for(int i = row_P[n]; i < row_P[n + 1]; i++) {
+        for(unsigned int i = row_P[n]; i < row_P[n + 1]; i++) {
             Q = .0;
             ind2 = col_P[i] * D;
             for(int d = 0; d < D; d++) buff[d]  = Y[ind1 + d];
@@ -385,11 +385,11 @@ double TSNE<NDims>::evaluateError(unsigned int* row_P, unsigned int* col_P, doub
 
 // Evaluate t-SNE cost function (exactly)
 template <int NDims>
-void TSNE<NDims>::getCost(double* P, double* Y, int N, int D, double* costs) {
+void TSNE<NDims>::getCost(double* P, double* Y, unsigned int N, int D, double* costs) {
 
   // Compute the squared Euclidean distance matrix
-  double* DD = (double*) malloc((long)N * N * sizeof(double));
-  double* Q = (double*) malloc((long)N * N * sizeof(double));
+  double* DD = (double*) malloc((unsigned long)N * N * sizeof(double));
+  double* Q = (double*) malloc((unsigned long)N * N * sizeof(double));
   if(DD == NULL || Q == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
   computeSquaredEuclideanDistance(Y, N, D, DD);
 
@@ -404,7 +404,7 @@ void TSNE<NDims>::getCost(double* P, double* Y, int N, int D, double* costs) {
       else Q[n * N + m] = DBL_MIN;
     }
   }
-  for(unsigned long i = 0; i < (long)N * N; i++) Q[i] /= sum_Q;
+  for(unsigned long i = 0; i < (unsigned long)N * N; i++) Q[i] /= sum_Q;
 
   // Sum t-SNE error
   for(unsigned long n = 0; n < N; n++) {
@@ -421,22 +421,22 @@ void TSNE<NDims>::getCost(double* P, double* Y, int N, int D, double* costs) {
 
 // Evaluate t-SNE cost function (approximately)
 template <int NDims>
-void TSNE<NDims>::getCost(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, int N, int D, double theta, double* costs)
+void TSNE<NDims>::getCost(unsigned int* row_P, unsigned int* col_P, double* val_P, double* Y, unsigned int N, int D, double theta, double* costs)
 {
 
   // Get estimate of normalization term
   SPTree<NDims>* tree = new SPTree<NDims>(Y, N);
   double* buff = (double*) calloc(D, sizeof(double));
   double sum_Q = .0;
-  for(int n = 0; n < N; n++) sum_Q += tree->computeNonEdgeForces(n, theta, buff);
+  for(unsigned int n = 0; n < N; n++) sum_Q += tree->computeNonEdgeForces(n, theta, buff);
 
   // Loop over all edges to compute t-SNE error
   int ind1, ind2;
   double  Q;
-  for(int n = 0; n < N; n++) {
+  for(unsigned int n = 0; n < N; n++) {
     ind1 = n * D;
     costs[n] = 0.0;
-    for(int i = row_P[n]; i < row_P[n + 1]; i++) {
+    for(unsigned int i = row_P[n]; i < row_P[n + 1]; i++) {
       Q = .0;
       ind2 = col_P[i] * D;
       for(int d = 0; d < D; d++) buff[d]  = Y[ind1 + d];
@@ -455,7 +455,7 @@ void TSNE<NDims>::getCost(unsigned int* row_P, unsigned int* col_P, double* val_
 
 // Compute input similarities with a fixed perplexity
 template <int NDims>
-void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, bool distance_precomputed) {
+void TSNE<NDims>::computeGaussianPerplexity(double* X, unsigned int N, int D, bool distance_precomputed) {
     size_t N2=N;
     N2*=N;
     P.resize(N2);
@@ -540,7 +540,7 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, bool distan
 // Compute input similarities with a fixed perplexity using ball trees (this function allocates memory another function should free)
 template <int NDims>
 template<double (*T)( const DataPoint&, const DataPoint& )>
-void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, int K) {
+void TSNE<NDims>::computeGaussianPerplexity(double* X, unsigned int N, int D, int K) {
 
     if(perplexity > K) Rprintf("Perplexity should be lower than K!\n");
 
@@ -550,7 +550,7 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, int K) {
     // Build ball tree on data set
       VpTree<DataPoint, T>* tree = new VpTree<DataPoint, T>();
       vector<DataPoint> obj_X(N, DataPoint(D, -1, X));
-      for(int n = 0; n < N; n++) obj_X[n] = DataPoint(D, n, X + n * D);
+      for(unsigned int n = 0; n < N; n++) obj_X[n] = DataPoint(D, n, X + n * D);
       tree->create(obj_X);
 
       // Loop over all points to find nearest neighbors
@@ -558,7 +558,7 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, int K) {
 
       int steps_completed = 0;
       #pragma omp parallel for schedule(guided) num_threads(num_threads)
-      for(int n = 0; n < N; n++) {
+      for(unsigned int n = 0; n < N; n++) {
 
         vector<DataPoint> indices;
         vector<double> distances;
@@ -591,7 +591,7 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, int K) {
 
 // Compute input similarities with a fixed perplexity from nearest-neighbour results.
 template<int NDims>
-void TSNE<NDims>::computeGaussianPerplexity(const int* nn_idx, const double* nn_dist, int N, int K) {
+void TSNE<NDims>::computeGaussianPerplexity(const int* nn_idx, const double* nn_dist, unsigned int N, int K) {
 
     if(perplexity > K) Rprintf("Perplexity should be lower than K!\n");
 
@@ -601,7 +601,7 @@ void TSNE<NDims>::computeGaussianPerplexity(const int* nn_idx, const double* nn_
     // Loop over all points to find nearest neighbors
     int steps_completed = 0;
     #pragma omp parallel for schedule(guided) num_threads(num_threads)
-    for(int n = 0; n < N; n++) {
+    for(unsigned int n = 0; n < N; n++) {
       double * cur_P = val_P.data() + row_P[n];
       computeProbabilities(perplexity, K, nn_dist + row_P[n], cur_P);
 
@@ -621,12 +621,12 @@ void TSNE<NDims>::computeGaussianPerplexity(const int* nn_idx, const double* nn_
 }
 
 template<int NDims>
-void TSNE<NDims>::setupApproximateMemory(int N, int K) {
+void TSNE<NDims>::setupApproximateMemory(unsigned int N, int K) {
     row_P.resize(N+1);
     col_P.resize(N*K);
     val_P.resize(N*K);
     row_P[0] = 0;
-    for(int n = 0; n < N; n++) row_P[n + 1] = row_P[n] + K;
+    for(unsigned int n = 0; n < N; n++) row_P[n + 1] = row_P[n] + K;
     return;
 }
 
@@ -681,23 +681,23 @@ void TSNE<NDims>::computeProbabilities (const double perplexity, const int K, co
     }
 
     // Row-normalize current row of P.
-    for(unsigned int m = 0; m < K; m++) {
+    for(int m = 0; m < K; m++) {
       cur_P[m] /= sum_P;
     }
     return;
 }
 
 template <int NDims>
-void TSNE<NDims>::symmetrizeMatrix(int N) {
+void TSNE<NDims>::symmetrizeMatrix(unsigned int N) {
     // Count number of elements and row counts of symmetric matrix
     int* row_counts = (int*) calloc(N, sizeof(int));
     if(row_counts == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-    for(int n = 0; n < N; n++) {
-        for(int i = row_P[n]; i < row_P[n + 1]; i++) {
+    for(unsigned int n = 0; n < N; n++) {
+        for(unsigned int i = row_P[n]; i < row_P[n + 1]; i++) {
 
             // Check whether element (col_P[i], n) is present
             bool present = false;
-            for(int m = row_P[col_P[i]]; m < row_P[col_P[i] + 1]; m++) {
+            for(unsigned int m = row_P[col_P[i]]; m < row_P[col_P[i] + 1]; m++) {
                 if(col_P[m] == n) present = true;
             }
             if(present) row_counts[n]++;
@@ -708,7 +708,7 @@ void TSNE<NDims>::symmetrizeMatrix(int N) {
         }
     }
     int no_elem = 0;
-    for(int n = 0; n < N; n++) no_elem += row_counts[n];
+    for(unsigned int n = 0; n < N; n++) no_elem += row_counts[n];
 
     // Allocate memory for symmetrized matrix
     std::vector<unsigned int> sym_row_P(N+1), sym_col_P(no_elem);
@@ -716,17 +716,17 @@ void TSNE<NDims>::symmetrizeMatrix(int N) {
 
     // Construct new row indices for symmetric matrix
     sym_row_P[0] = 0;
-    for(int n = 0; n < N; n++) sym_row_P[n + 1] = sym_row_P[n] + row_counts[n];
+    for(unsigned int n = 0; n < N; n++) sym_row_P[n + 1] = sym_row_P[n] + row_counts[n];
 
     // Fill the result matrix
     int* offset = (int*) calloc(N, sizeof(int));
     if(offset == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-    for(int n = 0; n < N; n++) {
-        for(int i = row_P[n]; i < row_P[n + 1]; i++) {                                  // considering element(n, col_P[i])
+    for(unsigned int n = 0; n < N; n++) {
+        for(unsigned int i = row_P[n]; i < row_P[n + 1]; i++) {                                  // considering element(n, col_P[i])
 
             // Check whether element (col_P[i], n) is present
             bool present = false;
-            for(int m = row_P[col_P[i]]; m < row_P[col_P[i] + 1]; m++) {
+            for(unsigned int m = row_P[col_P[i]]; m < row_P[col_P[i] + 1]; m++) {
                 if(col_P[m] == n) {
                     present = true;
                     if(n <= col_P[i]) {                                                 // make sure we do not add elements twice
@@ -769,10 +769,10 @@ void TSNE<NDims>::symmetrizeMatrix(int N) {
 
 // Compute squared Euclidean distance matrix (using BLAS)
 template <int NDims>
-void TSNE<NDims>::computeSquaredEuclideanDistance(double* X, int N, int D, double* DD) {
+void TSNE<NDims>::computeSquaredEuclideanDistance(double* X, unsigned int N, int D, double* DD) {
     double* dataSums = (double*) calloc(N, sizeof(double));
     if(dataSums == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-    for(int n = 0; n < N; n++) {
+    for(unsigned int n = 0; n < N; n++) {
         for(int d = 0; d < D; d++) {
             dataSums[n] += (X[n * D + d] * X[n * D + d]);
         }
@@ -784,20 +784,21 @@ void TSNE<NDims>::computeSquaredEuclideanDistance(double* X, int N, int D, doubl
     }
     double a1 = -2.0;
     double a2 = 1.0;
-    dgemm_("T", "N", &N, &N, &D, &a1, X, &D, X, &D, &a2, DD, &N);
+    int Nsigned = N;
+    dgemm_("T", "N", &Nsigned, &Nsigned, &D, &a1, X, &D, X, &D, &a2, DD, &Nsigned);
     free(dataSums); dataSums = NULL;
 }
 
 // Compute squared Euclidean distance matrix (No BLAS)
 template <int NDims>
-void TSNE<NDims>::computeSquaredEuclideanDistanceDirect(double* X, int N, int D, double* DD) {
+void TSNE<NDims>::computeSquaredEuclideanDistanceDirect(double* X, unsigned int N, int D, double* DD) {
   const double* XnD = X;
-  for(int n = 0; n < N; ++n, XnD += D) {
+  for(unsigned int n = 0; n < N; ++n, XnD += D) {
     const double* XmD = XnD + D;
     double* curr_elem = &DD[n*N + n];
     *curr_elem = 0.0;
     double* curr_elem_sym = curr_elem + N;
-    for(int m = n + 1; m < N; ++m, XmD+=D, curr_elem_sym+=N) {
+    for(unsigned int m = n + 1; m < N; ++m, XmD+=D, curr_elem_sym+=N) {
       *(++curr_elem) = 0.0;
       for(int d = 0; d < D; ++d) {
         *curr_elem += (XnD[d] - XmD[d]) * (XnD[d] - XmD[d]);
@@ -810,13 +811,13 @@ void TSNE<NDims>::computeSquaredEuclideanDistanceDirect(double* X, int N, int D,
 
 // Makes data zero-mean
 template <int NDims>
-void TSNE<NDims>::zeroMean(double* X, int N, int D) {
+void TSNE<NDims>::zeroMean(double* X, unsigned int N, int D) {
 	
 	// Compute data mean
 	double* mean = (double*) calloc(D, sizeof(double));
   if(mean == NULL) {  Rcpp::stop("Memory allocation failed!\n"); }
   int nD = 0;
-  for(int n = 0; n < N; n++) {
+  for(unsigned int n = 0; n < N; n++) {
     for(int d = 0; d < D; d++) {
       mean[d] += X[nD + d];
     }
@@ -828,7 +829,7 @@ void TSNE<NDims>::zeroMean(double* X, int N, int D) {
 
   // Subtract data mean
   nD = 0;
-  for(int n = 0; n < N; n++) {
+  for(unsigned int n = 0; n < N; n++) {
     for(int d = 0; d < D; d++) {
       X[nD + d] -= mean[d];
     }

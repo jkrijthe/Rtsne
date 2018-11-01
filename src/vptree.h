@@ -185,7 +185,7 @@ private:
   }
   
   // Helper function that searches the tree    
-  void search(Node* node, const T& target, int k, std::priority_queue<HeapItem>& heap, double* ptau)
+  void search(Node* node, const T& target, unsigned int k, std::priority_queue<HeapItem>& heap, double* ptau)
   {
     if(node == NULL) return;     // indicates that we're done here
     
