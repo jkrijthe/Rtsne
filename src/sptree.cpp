@@ -115,9 +115,6 @@ SPTree<NDims>::SPTree(double* inp_data, unsigned int N)
   }
   
   for(int d = 0; d < NDims; d++) mean_Y[d] /= (double) N;
-  // double sum_m = 0.0;
-  // for(int d = 0; d < NDims; d++) sum_m+=mean_Y[d];
-  // Rprintf("mean: %4.25f\n",sum_m);
   
   // Construct SPTree
   double* width = (double*) malloc(NDims * sizeof(double));
@@ -420,7 +417,6 @@ void SPTree<NDims>::computeEdgeForces(unsigned int* row_P, unsigned int* col_P, 
       }
       
       sqdist = val_P[i] / sqdist;
-      //Rprintf("it%d: %4.25f\n",n,sqdist);
       
       // Sum positive force
       for(unsigned int d = 0; d < NDims; d++) pos_f[ind1 + d] += sqdist * buff[d];
