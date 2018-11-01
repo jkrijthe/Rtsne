@@ -396,11 +396,11 @@ double SPTree<NDims>::computeNonEdgeForces(unsigned int point_index, double thet
 
 // Computes edge forces
 template<int NDims>
-void SPTree<NDims>::computeEdgeForces(unsigned int* row_P, unsigned int* col_P, double* val_P, int N, double* pos_f) const
+void SPTree<NDims>::computeEdgeForces(unsigned int* row_P, unsigned int* col_P, double* val_P, int N, double* pos_f, int num_threads) const
 {
   
   // Loop over all edges in the graph
-  #pragma omp parallel for schedule(static)
+  #pragma omp parallel for schedule(static) num_threads(num_threads)
   for(unsigned int n = 0; n < N; n++) {
     unsigned int ind1 = n * NDims;
     for(unsigned int i = row_P[n]; i < row_P[n + 1]; i++) {

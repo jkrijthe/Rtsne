@@ -46,9 +46,6 @@
 
 #ifdef _OPENMP
   #include <omp.h>
-#else
-  #define omp_get_num_threads() 1
-  #define omp_get_thread_num() 0
 #endif
 
 extern "C" {
@@ -65,14 +62,14 @@ TSNE<NDims>::TSNE(double Perplexity, double Theta, bool Verbose, int Max_iter, b
     max_iter(Max_iter), stop_lying_iter(Stop_lying_iter), mom_switch_iter(Mom_switch_iter), num_threads(Num_threads),
     verbose(Verbose), init(Init), exact(theta==.0) {
 
-    // Print notice whether OpenMP is used
     #ifdef _OPENMP
       int threads = num_threads;
       if (num_threads==0) {
         threads = omp_get_max_threads();
       }
-      omp_set_num_threads(threads);
-      if (verbose) Rprintf("OpenMP is working...\n");
+      
+      // Print notice whether OpenMP is used
+      if (verbose) Rprintf("OpenMP is working. %d threads.\n", threads);
     #endif
 
     return;
@@ -248,12 +245,12 @@ void TSNE<NDims>::computeGradient(double* P, unsigned int* inp_row_P, unsigned i
     double* pos_f = (double*) calloc(N * D, sizeof(double));
     double* neg_f = (double*) calloc(N * D, sizeof(double));
     if(pos_f == NULL || neg_f == NULL) { Rcpp::stop("Memory allocation failed!\n"); }
-    tree->computeEdgeForces(inp_row_P, inp_col_P, inp_val_P, N, pos_f);
+    tree->computeEdgeForces(inp_row_P, inp_col_P, inp_val_P, N, pos_f, num_threads);
 
     // Storing the output to sum in single-threaded mode; avoid randomness in rounding errors.
     std::vector<double> output(N);
 
-    #pragma omp parallel for schedule(guided)
+    #pragma omp parallel for schedule(guided) num_threads(num_threads)
     for (int n = 0; n < N; n++) {
       output[n]=tree->computeNonEdgeForces(n, theta, neg_f + n * D);
     }
@@ -560,7 +557,7 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, int K) {
       if (verbose) Rprintf("Building tree...\n");
 
       int steps_completed = 0;
-      #pragma omp parallel for schedule(guided)
+      #pragma omp parallel for schedule(guided) num_threads(num_threads)
       for(int n = 0; n < N; n++) {
 
         vector<DataPoint> indices;
@@ -601,7 +598,7 @@ void TSNE<NDims>::computeGaussianPerplexity(const int* nn_idx, const double* nn_
 
     // Loop over all points to find nearest neighbors
     int steps_completed = 0;
-    #pragma omp parallel for schedule(guided)
+    #pragma omp parallel for schedule(guided) num_threads(num_threads)
     for(int n = 0; n < N; n++) {
       double * cur_P = val_P.data() + row_P[n];
       computeProbabilities(perplexity, K, nn_dist + row_P[n], cur_P);

@@ -71,6 +71,7 @@ private:
   bool is_leaf;
   unsigned int size;
   unsigned int cum_size;
+  int num_threads;
   
   // Axis-aligned bounding box stored as a center with half-dimensions to represent the boundaries of this quad tree
   Cell<NDims> boundary;
@@ -100,7 +101,7 @@ public:
   void getAllIndices(unsigned int* indices);
   unsigned int getDepth();
   double computeNonEdgeForces(unsigned int point_index, double theta, double neg_f[]) const;
-  void computeEdgeForces(unsigned int* row_P, unsigned int* col_P, double* val_P, int N, double* pos_f) const;
+  void computeEdgeForces(unsigned int* row_P, unsigned int* col_P, double* val_P, int N, double* pos_f, int num_threads) const;
   void print();
   
 private:
