@@ -11,7 +11,7 @@ downloads](http://cranlogs.r-pkg.org/badges/Rtsne)](https://cran.r-project.org/p
 
 # R wrapper for Van der Maaten’s Barnes-Hut implementation of t-Distributed Stochastic Neighbor Embedding
 
-\#\#Installation
+## Installation
 
 To install from CRAN:
 
@@ -27,8 +27,10 @@ if(!require(devtools)) install.packages("devtools") # If not already installed
 devtools::install_github("jkrijthe/Rtsne")
 ```
 
-\#\#Usage After installing the package, use the following code to run a
-simple example (to install, see below).
+## Usage
+
+After installing the package, use the following code to run a simple
+example (to install, see below).
 
 ``` r
 library(Rtsne) # Load package
@@ -40,12 +42,16 @@ plot(tsne_out$Y,col=iris_unique$Species,asp=1) # Plot the result
 
 ![](tools/example-1.png)<!-- -->
 
-\#Details This R package offers a wrapper around the Barnes-Hut TSNE C++
+# Details
+
+This R package offers a wrapper around the Barnes-Hut TSNE C++
 implementation of \[2\] \[3\]. Changes were made to the original code to
 allow it to function as an R package and to add additional functionality
 and speed improvements.
 
-\#References \[1\] L.J.P. van der Maaten and G.E. Hinton. Visualizing
+# References
+
+\[1\] L.J.P. van der Maaten and G.E. Hinton. Visualizing
 High-Dimensional Data Using t-SNE. Journal of Machine Learning Research
 9(Nov):2579-2605, 2008.
 
