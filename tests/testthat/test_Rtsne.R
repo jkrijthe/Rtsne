@@ -19,6 +19,9 @@ test_that("Scaling gives the expected result", {
 
 test_that("Manual distance calculation equals C++ distance calculation", {
   
+  # Does not work on 32 bit windows
+  skip_on_cran()
+  
   # Exact
   set.seed(50)
   tsne_matrix <- Rtsne(as.matrix(iris_unique[,1:4]),verbose=FALSE, 
@@ -74,6 +77,9 @@ test_that("Accepts data.frame", {
 })
 
 test_that("OpenMP with different threads returns same result",{
+  
+  # Does not work on windows
+  skip_on_cran()
   
   set.seed(50)
   tsne_out_df1 <- Rtsne(iris_unique[,1:4],dims=3,verbose=FALSE, is_distance = FALSE,
