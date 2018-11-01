@@ -5,17 +5,6 @@
 
 using namespace Rcpp;
 
-// normalize_input_cpp
-Rcpp::NumericMatrix normalize_input_cpp(Rcpp::NumericMatrix input);
-RcppExport SEXP _Rtsne_normalize_input_cpp(SEXP inputSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type input(inputSEXP);
-    rcpp_result_gen = Rcpp::wrap(normalize_input_cpp(input));
-    return rcpp_result_gen;
-END_RCPP
-}
 // Rtsne_cpp
 Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims, double perplexity, double theta, bool verbose, int max_iter, bool distance_precomputed, NumericMatrix Y_in, bool init, int stop_lying_iter, int mom_switch_iter, double momentum, double final_momentum, double eta, double exaggeration_factor, unsigned int num_threads);
 RcppExport SEXP _Rtsne_Rtsne_cpp(SEXP XSEXP, SEXP no_dimsSEXP, SEXP perplexitySEXP, SEXP thetaSEXP, SEXP verboseSEXP, SEXP max_iterSEXP, SEXP distance_precomputedSEXP, SEXP Y_inSEXP, SEXP initSEXP, SEXP stop_lying_iterSEXP, SEXP mom_switch_iterSEXP, SEXP momentumSEXP, SEXP final_momentumSEXP, SEXP etaSEXP, SEXP exaggeration_factorSEXP, SEXP num_threadsSEXP) {
@@ -68,11 +57,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// normalize_input_cpp
+Rcpp::NumericMatrix normalize_input_cpp(Rcpp::NumericMatrix input);
+RcppExport SEXP _Rtsne_normalize_input_cpp(SEXP inputSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type input(inputSEXP);
+    rcpp_result_gen = Rcpp::wrap(normalize_input_cpp(input));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_Rtsne_normalize_input_cpp", (DL_FUNC) &_Rtsne_normalize_input_cpp, 1},
     {"_Rtsne_Rtsne_cpp", (DL_FUNC) &_Rtsne_Rtsne_cpp, 16},
     {"_Rtsne_Rtsne_nn_cpp", (DL_FUNC) &_Rtsne_Rtsne_nn_cpp, 16},
+    {"_Rtsne_normalize_input_cpp", (DL_FUNC) &_Rtsne_normalize_input_cpp, 1},
     {NULL, NULL, 0}
 };
 

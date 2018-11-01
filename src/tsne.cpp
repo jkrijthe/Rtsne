@@ -579,7 +579,9 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, int K) {
         #pragma omp atomic
         ++steps_completed;
 
-        if(steps_completed % 10000 == 0) Rprintf(" - point %d of %d\n", steps_completed, N);
+        if (verbose) { 
+          if(steps_completed % 10000 == 0) Rprintf(" - point %d of %d\n", steps_completed, N);
+        }
       }
 
       // Clean up memory
@@ -612,7 +614,9 @@ void TSNE<NDims>::computeGaussianPerplexity(const int* nn_idx, const double* nn_
       #pragma omp atomic
       ++steps_completed;
 
-      if(steps_completed % 10000 == 0) Rprintf(" - point %d of %d\n", steps_completed, N);
+      if (verbose) { 
+        if(steps_completed % 10000 == 0) Rprintf(" - point %d of %d\n", steps_completed, N);
+      }
     }
 }
 
