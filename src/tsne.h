@@ -69,6 +69,8 @@ private:
 
     void computeProbabilities(const double perplexity, const int K, const double* distances, double* cur_P);
     void computeSquaredEuclideanDistance(double* X, int N, int D, double* DD);
+    void computeSquaredEuclideanDistanceDirect(double* X, int N, int D, double* DD);
+    
     double randn();
 
     // Member variables.

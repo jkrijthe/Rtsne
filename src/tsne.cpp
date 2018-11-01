@@ -174,10 +174,10 @@ void TSNE<NDims>::trainIterations(int N, double* Y, double* cost, double* iterco
 
 	// Initialize solution (randomly), if not already done
 	if (!init) { for(int i = 0; i < N * NDims; i++) Y[i] = randn() * .0001; }
-	
-    clock_t start = clock(), end;
-    float total_time=0;
-    int costi = 0; //iterator for saving the total costs for the iterations
+
+  clock_t start = clock(), end;
+  float total_time=0;
+  int costi = 0; //iterator for saving the total costs for the iterations
 
 	for(int iter = 0; iter < max_iter; iter++) {
 
@@ -225,7 +225,7 @@ void TSNE<NDims>::trainIterations(int N, double* Y, double* cost, double* iterco
 
     if(exact) getCost(P.data(), Y, N, NDims, cost);
     else      getCost(row_P.data(), col_P.data(), val_P.data(), Y, N, NDims, theta, cost);  // doing approximate computation here!
-
+    
     // Clean up memory
     free(dY);
     free(uY);
@@ -467,13 +467,13 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, bool distan
 	if (distance_precomputed) {
 	  DD = X;
 	} else {
-	  computeSquaredEuclideanDistance(X, N, D, DD);
+	  computeSquaredEuclideanDistanceDirect(X, N, D, DD);
+	  
+	  // Needed to make sure the results are exactly equal to distance calculation in R
+	  for (size_t n=0; n<N*N; n++) {
+	    DD[n] = sqrt(DD[n])*sqrt(DD[n]);
+	  }
 	}
-	
-	// For debugging purposes:
-// 	for (int n=0; n<N*N; n++) {
-//     Rprintf(" %4.4f \n", DD[n]);
-// 	}
 
 	// Compute the Gaussian kernel row by row
 	for(unsigned long n = 0; n < N; n++) {
@@ -484,7 +484,7 @@ void TSNE<NDims>::computeGaussianPerplexity(double* X, int N, int D, bool distan
 		double min_beta = -DBL_MAX;
 		double max_beta =  DBL_MAX;
 		double tol = 1e-5;
-        double sum_P;
+    double sum_P;
 		
 		// Iterate until we found a good perplexity
 		int iter = 0;
@@ -782,6 +782,25 @@ void TSNE<NDims>::computeSquaredEuclideanDistance(double* X, int N, int D, doubl
     double a2 = 1.0;
     dgemm_("T", "N", &N, &N, &D, &a1, X, &D, X, &D, &a2, DD, &N);
     free(dataSums); dataSums = NULL;
+}
+
+// Compute squared Euclidean distance matrix (No BLAS)
+template <int NDims>
+void TSNE<NDims>::computeSquaredEuclideanDistanceDirect(double* X, int N, int D, double* DD) {
+  const double* XnD = X;
+  for(int n = 0; n < N; ++n, XnD += D) {
+    const double* XmD = XnD + D;
+    double* curr_elem = &DD[n*N + n];
+    *curr_elem = 0.0;
+    double* curr_elem_sym = curr_elem + N;
+    for(int m = n + 1; m < N; ++m, XmD+=D, curr_elem_sym+=N) {
+      *(++curr_elem) = 0.0;
+      for(int d = 0; d < D; ++d) {
+        *curr_elem += (XnD[d] - XmD[d]) * (XnD[d] - XmD[d]);
+      }
+      *curr_elem_sym = *curr_elem;
+    }
+  }
 }
 
 
