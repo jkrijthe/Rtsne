@@ -152,6 +152,18 @@ test_that("Error conditions", {
   expect_error(Rtsne(matrix(0,2,3),initial_dims=1.3),"dimensionality")
   expect_error(Rtsne(matrix(0,2,3),dims=4),"dims")
   expect_error(Rtsne(matrix(0,2,3),max_iter=1.5),"should")
+  
+  expect_error(Rtsne(matrix(0,2,3),Y_init=matrix(0,2,1)),"incorrect format")
+  expect_error(Rtsne(matrix(0,2,3),perplexity = 0),"positive")
+  expect_error(Rtsne(matrix(0,2,3),theta = -0.1),"lie")
+  expect_error(Rtsne(matrix(0,2,3),theta = 1.001),"lie")
+  expect_error(Rtsne(matrix(0,2,3),stop_lying_iter = -1),"positive")
+  expect_error(Rtsne(matrix(0,2,3),mom_switch_iter = -1),"positive")
+  expect_error(Rtsne(matrix(0,2,3),momentum = -0.1),"positive")
+  expect_error(Rtsne(matrix(0,2,3),final_momentum = -0.1),"positive")
+  expect_error(Rtsne(matrix(0,2,3),eta = 0.0),"positive")
+  expect_error(Rtsne(matrix(0,2,3),exaggeration_factor = 0.0),"positive")
+  expect_error(Rtsne(matrix(0,2,3)),"perplexity is too large")
 })
 
 test_that("Verbose option", {

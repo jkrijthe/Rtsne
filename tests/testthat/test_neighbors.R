@@ -63,6 +63,26 @@ test_that("Rtsne with nearest-neighbor input behaves upon normalization", {
     expect_equal(out$Y, blah$Y)
 })
 
+test_that("Rtsne with nearest-neighbor input gives no errors for no_dims 1 and 3", {
+  D <- as.matrix(dist(simdata))
+  out <- NNFUN(D, 90) # 3 * perplexity
+  all.indices <- out$index
+  all.distances <- out$distance
+  
+  # The vptree involves a few R::runif calls, which alters the seed in the precomputed distance case.
+  # This results in different random initialization of Y.
+  # Thus, we need to supply a pre-computed Y as well.
+  Y_in <- matrix(runif(nrow(simdata)*1), ncol=1)
+  out <- Rtsne_neighbors(all.indices, all.distances, Y_init=Y_in, perplexity=30, max_iter=1, dims = 1)
+  blah <- Rtsne(D, is_distance=TRUE, Y_init=Y_in, perplexity=30, max_iter=1,dims = 1)
+  expect_equal(out$Y, blah$Y)
+  
+  Y_in <- matrix(runif(nrow(simdata)*3), ncol=3)
+  out <- Rtsne_neighbors(all.indices, all.distances, Y_init=Y_in, perplexity=30, max_iter=1, dims = 3)
+  blah <- Rtsne(D, is_distance=TRUE, Y_init=Y_in, perplexity=30, max_iter=1,dims = 3)
+  expect_equal(out$Y, blah$Y)
+})
+
 test_that("error conditions are correctly explored", {
     expect_error(Rtsne_neighbors("yay", matrix(0, 50, 10), Y_init=Y_in, perplexity=10), "matrix")
     expect_error(Rtsne_neighbors(matrix(0L, 50, 5), matrix(0, 50, 10), Y_init=Y_in, perplexity=10), "same dimensions")
