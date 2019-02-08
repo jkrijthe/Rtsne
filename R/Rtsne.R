@@ -171,7 +171,9 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   out$Y <- t(out$Y) # Transposing back.
   info <- list(N=ncol(X))
   if (!is_distance) { out$origD <- nrow(X) } # 'origD' is unknown for distance matrices.
-  c(info, out, .clear_unwanted_params(tsne.args))
+  out <- c(info, out, .clear_unwanted_params(tsne.args))
+  class(out) <- c("Rtsne","list")
+  out
 }
 
 #' @describeIn Rtsne tsne on given dist object
