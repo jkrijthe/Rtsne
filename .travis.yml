@@ -2,13 +2,14 @@ language: r
 sudo: false
 cache: packages
 
-r:
-- oldrel
-- release
-- devel
+matrix:
+  include:
+  - r: release
+    r_github_packages: r-lib/covr
+    after_success: Rscript -e 'covr::codecov()'
+  - r: devel
+  - r: oldrel
 
-after_success:
-  - Rscript -e 'covr::codecov()'
 
 notifications:
   email:
