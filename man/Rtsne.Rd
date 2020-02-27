@@ -76,7 +76,7 @@ Rtsne_neighbors(index, distance, dims = 2, perplexity = 30,
 
 \item{exaggeration_factor}{numeric; Exaggeration factor used to multiply the P matrix in the first part of the optimization (default: 12.0)}
 
-\item{num_threads}{integer; Number of threads to use using OpenMP, default 1. 0 corresponds to using all available cores}
+\item{num_threads}{integer; Number of threads to use when using OpenMP, default is 1. Setting to 0 corresponds to detecting and using all available cores}
 
 \item{index}{integer matrix; Each row contains the identity of the nearest neighbors for each observation}
 

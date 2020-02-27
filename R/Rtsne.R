@@ -39,7 +39,7 @@
 #' @param final_momentum numeric; Momentum used in the final part of the optimization (default: 0.8)
 #' @param eta numeric; Learning rate (default: 200.0)
 #' @param exaggeration_factor numeric; Exaggeration factor used to multiply the P matrix in the first part of the optimization (default: 12.0)
-#' @param num_threads integer; Number of threads to use using OpenMP, default 1. 0 corresponds to using all available cores
+#' @param num_threads integer; Number of threads to use when using OpenMP, default is 1. Setting to 0 corresponds to detecting and using all available cores
 #' 
 #' @return List with the following elements:
 #' \item{Y}{Matrix containing the new representations for the objects}
@@ -134,6 +134,7 @@ Rtsne.default <- function(X, dims=2, initial_dims=50,
   if (is_distance & !(is.matrix(X) & (nrow(X)==ncol(X)))) { stop("Input is not an accepted distance matrix") }
   if (!(is.logical(pca_center) && is.logical(pca_scale)) ) { stop("pca_center and pca_scale should be TRUE or FALSE")}
   if (!is.wholenumber(initial_dims) || initial_dims<=0) { stop("Incorrect initial dimensionality.")}
+  if (!is.wholenumber(num_threads) || num_threads<0) { stop("Incorrect number of threads.")}
   tsne.args <- .check_tsne_params(nrow(X), dims=dims, perplexity=perplexity, theta=theta, max_iter=max_iter, verbose=verbose, 
         Y_init=Y_init, stop_lying_iter=stop_lying_iter, mom_switch_iter=mom_switch_iter, 
         momentum=momentum, final_momentum=final_momentum, eta=eta, exaggeration_factor=exaggeration_factor)
