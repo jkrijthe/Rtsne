@@ -28,7 +28,7 @@
 #' @param max_iter integer; Number of iterations (default: 1000)
 #' @param verbose logical; Whether progress updates should be printed (default: global "verbose" option, or FALSE if that is not set)
 #' @param ... Other arguments that can be passed to Rtsne
-#' @param is_distance logical; Indicate whether X is a distance matrix (experimental, default: FALSE)
+#' @param is_distance logical; Indicate whether X is a distance matrix (default: FALSE)
 #' @param Y_init matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with exaggerated perplexity values and a larger momentum term will be skipped.
 #' @param pca_center logical; Should data be centered before pca is applied? (default: TRUE)
 #' @param pca_scale logical; Should data be scaled before pca is applied? (default: FALSE)

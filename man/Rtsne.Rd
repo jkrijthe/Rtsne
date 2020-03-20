@@ -54,7 +54,7 @@ Rtsne_neighbors(index, distance, dims = 2, perplexity = 30,
 
 \item{verbose}{logical; Whether progress updates should be printed (default: global "verbose" option, or FALSE if that is not set)}
 
-\item{is_distance}{logical; Indicate whether X is a distance matrix (experimental, default: FALSE)}
+\item{is_distance}{logical; Indicate whether X is a distance matrix (default: FALSE)}
 
 \item{Y_init}{matrix; Initial locations of the objects. If NULL, random initialization will be used (default: NULL). Note that when using this, the initial stage with exaggerated perplexity values and a larger momentum term will be skipped.}
 
