@@ -10,26 +10,54 @@
 \usage{
 Rtsne(X, ...)
 
-\method{Rtsne}{default}(X, dims = 2, initial_dims = 50,
-  perplexity = 30, theta = 0.5, check_duplicates = TRUE,
-  pca = TRUE, partial_pca = FALSE, max_iter = 1000,
-  verbose = getOption("verbose", FALSE), is_distance = FALSE,
-  Y_init = NULL, pca_center = TRUE, pca_scale = FALSE,
-  normalize = TRUE, stop_lying_iter = ifelse(is.null(Y_init), 250L,
-  0L), mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L),
-  momentum = 0.5, final_momentum = 0.8, eta = 200,
-  exaggeration_factor = 12, num_threads = 1, ...)
+\method{Rtsne}{default}(
+  X,
+  dims = 2,
+  initial_dims = 50,
+  perplexity = 30,
+  theta = 0.5,
+  check_duplicates = TRUE,
+  pca = TRUE,
+  partial_pca = FALSE,
+  max_iter = 1000,
+  verbose = getOption("verbose", FALSE),
+  is_distance = FALSE,
+  Y_init = NULL,
+  pca_center = TRUE,
+  pca_scale = FALSE,
+  normalize = TRUE,
+  stop_lying_iter = ifelse(is.null(Y_init), 250L, 0L),
+  mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L),
+  momentum = 0.5,
+  final_momentum = 0.8,
+  eta = 200,
+  exaggeration_factor = 12,
+  num_threads = 1,
+  ...
+)
 
 \method{Rtsne}{dist}(X, ..., is_distance = TRUE)
 
 \method{Rtsne}{data.frame}(X, ...)
 
-Rtsne_neighbors(index, distance, dims = 2, perplexity = 30,
-  theta = 0.5, max_iter = 1000, verbose = getOption("verbose",
-  FALSE), Y_init = NULL, stop_lying_iter = ifelse(is.null(Y_init),
-  250L, 0L), mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L),
-  momentum = 0.5, final_momentum = 0.8, eta = 200,
-  exaggeration_factor = 12, num_threads = 1, ...)
+Rtsne_neighbors(
+  index,
+  distance,
+  dims = 2,
+  perplexity = 30,
+  theta = 0.5,
+  max_iter = 1000,
+  verbose = getOption("verbose", FALSE),
+  Y_init = NULL,
+  stop_lying_iter = ifelse(is.null(Y_init), 250L, 0L),
+  mom_switch_iter = ifelse(is.null(Y_init), 250L, 0L),
+  momentum = 0.5,
+  final_momentum = 0.8,
+  eta = 200,
+  exaggeration_factor = 12,
+  num_threads = 1,
+  ...
+)
 }
 \arguments{
 \item{X}{matrix; Data matrix (each row is an observation, each column is a variable)}

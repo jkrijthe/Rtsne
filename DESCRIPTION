@@ -17,4 +17,4 @@ LinkingTo: Rcpp
 Suggests:
     irlba,
     testthat
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.2
