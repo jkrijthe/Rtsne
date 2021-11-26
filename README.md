@@ -5,6 +5,7 @@
 version](http://www.r-pkg.org/badges/version/Rtsne)](https://cran.r-project.org/package=Rtsne/)
 [![Travis-CI Build
 Status](https://travis-ci.org/jkrijthe/Rtsne.png?branch=master)](https://travis-ci.org/jkrijthe/Rtsne)
+[![R-CMD-check](https://github.com/jkrijthe/Rtsne/workflows/R-CMD-check/badge.svg)](https://github.com/jkrijthe/Rtsne/actions)
 [![codecov.io](https://codecov.io/github/jkrijthe/Rtsne/coverage.svg?branch=master)](https://codecov.io/github/jkrijthe/Rtsne?branch=master)
 [![CRAN mirror
 downloads](http://cranlogs.r-pkg.org/badges/Rtsne)](https://cran.r-project.org/package=Rtsne/)
@@ -19,8 +20,7 @@ To install from CRAN:
 install.packages("Rtsne") # Install Rtsne package from CRAN
 ```
 
-To install the latest version from the github repository,
-use:
+To install the latest version from the github repository, use:
 
 ``` r
 if(!require(devtools)) install.packages("devtools") # If not already installed
