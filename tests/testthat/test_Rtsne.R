@@ -80,6 +80,7 @@ test_that("OpenMP with different threads returns same result",{
   
   # Does not work on windows
   skip_on_cran()
+  skip_on_ci()
   
   set.seed(50)
   tsne_out_df1 <- Rtsne(iris_unique[,1:4],dims=3,verbose=FALSE, is_distance = FALSE,
