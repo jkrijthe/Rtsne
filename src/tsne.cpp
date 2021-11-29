@@ -30,7 +30,7 @@
  *
  */
 
-
+#define USE_FC_LEN_T
 
 #include <math.h>
 #include <float.h>
@@ -49,9 +49,13 @@
 #endif
 
 extern "C" {
-    #include <R_ext/BLAS.h>
+  #include <Rconfig.h>
+  #include <R_ext/BLAS.h>
 }
 
+#ifndef FCONE
+# define FCONE
+#endif
 
 using namespace std;
 
@@ -785,7 +789,7 @@ void TSNE<NDims>::computeSquaredEuclideanDistance(double* X, unsigned int N, int
     double a1 = -2.0;
     double a2 = 1.0;
     int Nsigned = N;
-    dgemm_("T", "N", &Nsigned, &Nsigned, &D, &a1, X, &D, X, &D, &a2, DD, &Nsigned);
+    dgemm_("T", "N", &Nsigned, &Nsigned, &D, &a1, X, &D, X, &D, &a2, DD, &Nsigned  FCONE FCONE);
     free(dataSums); dataSums = NULL;
 }
 
