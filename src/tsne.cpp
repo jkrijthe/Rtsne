@@ -221,7 +221,7 @@ void TSNE<NDims>::trainIterations(unsigned int N, double* Y, double* cost, doubl
                 if (verbose) Rprintf("Iteration %d: error is %f (50 iterations in %4.2f seconds)\n", iter+1, C, (float) (end - start) / CLOCKS_PER_SEC);
             }
             itercost[costi] = C;
-            itercost++;
+            costi++;
 			  start = clock();
         }
     }
