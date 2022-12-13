@@ -145,13 +145,13 @@ If \code{X} is a data.frame, it is transformed into a matrix using \code{\link{m
 }
 \section{Methods (by class)}{
 \itemize{
-\item \code{default}: Default Interface
+\item \code{Rtsne(default)}: Default Interface
 
-\item \code{dist}: tsne on given dist object
+\item \code{Rtsne(dist)}: tsne on given dist object
 
-\item \code{data.frame}: tsne on data.frame
+\item \code{Rtsne(data.frame)}: tsne on data.frame
+
 }}
-
 \section{Supplying precomputed distances}{
 
 If a distance matrix is already available, this can be directly supplied to \code{Rtsne} by setting \code{is_distance=TRUE}.
