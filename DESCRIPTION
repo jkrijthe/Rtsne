@@ -10,6 +10,7 @@ Description: An R wrapper around the fast T-distributed Stochastic
     Neighbor Embedding implementation by Van der Maaten  (see <https://github.com/lvdmaaten/bhtsne/> for more information on the original implementation).
 License: file LICENSE
 URL: https://github.com/jkrijthe/Rtsne
+Encoding: UTF-8
 Imports:
     Rcpp (>= 0.11.0),
     stats
