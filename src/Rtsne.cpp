@@ -18,7 +18,7 @@ Rcpp::List Rtsne_cpp(NumericMatrix X, int no_dims, double perplexity,
     size_t N = X.ncol(), D = X.nrow();
     double * data=X.begin();
     
-    if (verbose) Rprintf("Read the %zu x %zu data matrix successfully!\n", N, D);
+    if (verbose) Rprintf("Read the %lu x %lu data matrix successfully!\n", (unsigned long)N, (unsigned long)D);
     std::vector<double> Y(N * no_dims), costs(N), itercosts(static_cast<int>(std::ceil(max_iter/50.0)));
   
     // Providing user-supplied solution.
@@ -60,7 +60,7 @@ Rcpp::List Rtsne_nn_cpp(IntegerMatrix nn_dex, NumericMatrix nn_dist,
                      double eta, double exaggeration_factor, unsigned int num_threads) {
 
     size_t N = nn_dex.ncol(), K=nn_dex.nrow(); // transposed - columns are points, rows are neighbors.
-    if (verbose) Rprintf("Read the NN results for %zu points successfully!\n", N);
+    if (verbose) Rprintf("Read the NN results for %lu points successfully!\n", (unsigned long)N);
     std::vector<double> Y(N * no_dims), costs(N), itercosts(static_cast<int>(std::ceil(max_iter/50.0)));
   
     // Providing user-supplied solution.
