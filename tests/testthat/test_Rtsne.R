@@ -126,6 +126,7 @@ test_that("Continuing from initialization gives approximately the same result as
 })
 
 test_that("partial_pca FALSE and TRUE give similar results", {
+  skip_if_not_installed("irlba")
   
   # Only first few iterations
   iter_equal <- 5
