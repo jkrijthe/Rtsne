@@ -126,6 +126,7 @@ test_that("Continuing from initialization gives approximately the same result as
 })
 
 test_that("partial_pca FALSE and TRUE give similar results", {
+  skip_if_not_installed("irlba")
   
   # Only first few iterations
   iter_equal <- 5
@@ -136,8 +137,6 @@ test_that("partial_pca FALSE and TRUE give similar results", {
   
   set.seed(42)
   tsne_out_prcomp <- Rtsne(fat_data, max_iter = iter_equal)
-
-  skip_if_not_installed("irlba")
   set.seed(42)
   tsne_out_irlba <- Rtsne(fat_data, partial_pca = T, max_iter = iter_equal)
 
