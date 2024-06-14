@@ -137,6 +137,7 @@ test_that("partial_pca FALSE and TRUE give similar results", {
   
   set.seed(42)
   tsne_out_prcomp <- Rtsne(fat_data, max_iter = iter_equal)
+
   set.seed(42)
   tsne_out_irlba <- Rtsne(fat_data, partial_pca = T, max_iter = iter_equal)
 
